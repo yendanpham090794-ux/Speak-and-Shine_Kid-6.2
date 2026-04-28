@@ -1,0 +1,2581 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<script type="module">
+import{initializeApp,getApps,getApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getFirestore,doc,setDoc,getDoc,onSnapshot,collection,getDocs,writeBatch,deleteDoc}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import{getStorage,ref,uploadString,getDownloadURL,deleteObject}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+window._fbMods={initializeApp,getApps,getApp,getFirestore,doc,setDoc,getDoc,onSnapshot,collection,getDocs,writeBatch,deleteDoc,getStorage,ref,uploadString,getDownloadURL,deleteObject};
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌟 Speak & Shine</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap');
+:root{
+  --pink:#f06292;--pink-l:#fff0f5;--pink-d:#c2185b;
+  --teal:#26c6a0;--teal-l:#e0faf3;--teal-d:#00897b;
+  --blue:#42a5f5;--blue-l:#e8f4fe;
+  --orange:#ffa726;--orange-l:#fff8ee;
+  --purple:#9c6fef;--purple-l:#f3eeff;
+  --green:#4caf50;--green-l:#f0faf0;--green-d:#2e7d32;
+  --red:#ef5350;--red-l:#fff0f0;
+  --yellow:#ffd54f;--yellow-l:#fffde7;
+  --bg:#f5f6fa;--card:#fff;--border:#ebebeb;
+  --text:#1a1a2e;--muted:#8a8a9a;--r:14px;
+  --fs:15px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:var(--fs)}
+
+/* ── NAV ── */
+.nav{background:var(--card);border-bottom:2px solid var(--border);height:56px;display:flex;align-items:center;padding:0 16px;gap:6px;position:sticky;top:0;z-index:60;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.logo{font-family:'Baloo 2',cursive;font-size:20px;font-weight:800;color:var(--pink);white-space:nowrap;margin-right:4px}
+.logo em{color:var(--teal);font-style:normal}
+.nav-tab{padding:7px 14px;border-radius:20px;border:none;background:transparent;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--muted);transition:all .15s;white-space:nowrap}
+.nav-tab:hover{background:var(--pink-l);color:var(--pink)}
+.nav-tab.active{background:var(--pink);color:white}
+.nav-tab.active.t-vocab{background:var(--orange)}
+.nav-tab.active.t-reward{background:var(--yellow);color:var(--text)}
+.nav-tab.active.t-progress{background:var(--green)}
+.nav-spacer{flex:1}
+.key-btn{padding:5px 12px;border-radius:14px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.key-dot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0}
+.key-dot.ok{background:var(--green)}
+
+/* ── PAGES ── */
+.page{display:none}
+.page.active{display:block}
+
+/* ═══════════════ LESSON PAGE ═══════════════ */
+.lesson-layout{display:grid;grid-template-columns:1fr 310px;min-height:calc(100vh - 56px)}
+.lesson-feed{padding:16px 20px;overflow-y:auto;max-height:calc(100vh - 56px)}
+.lesson-right{border-left:1px solid var(--border);background:var(--card);position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;display:flex;flex-direction:column}
+
+.sess-bar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px}
+.sess-pill{padding:5px 12px;border-radius:18px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--muted);transition:all .15s}
+.sess-pill:hover{border-color:var(--blue);color:var(--blue)}
+.sess-pill.active{background:var(--blue);border-color:var(--blue);color:white}
+.sess-pill.done{border-color:var(--green);color:var(--green)}
+.sess-pill.active.done{background:var(--green);border-color:var(--green);color:white}
+
+.sess-hero{background:linear-gradient(135deg,#fff0f5,#f3eeff,#e0faf3);border-radius:var(--r);border:1px solid #f0d4e8;padding:14px 18px;margin-bottom:14px}
+.sh-row{display:flex;gap:10px;align-items:flex-start}
+.sh-phase{font-size:28px;flex-shrink:0;line-height:1.2}
+.sh-title{font-family:'Baloo 2',cursive;font-size:20px;font-weight:800;color:var(--pink-d);line-height:1.2}
+.sh-sub{font-size:13px;color:#7a4fa0;font-weight:600;margin-top:2px}
+.sh-obj{font-size:13px;color:var(--muted);margin-top:6px;background:white;padding:8px 12px;border-radius:9px;border:1px solid #f0d4e8;line-height:1.5}
+.sh-note{margin-top:8px;font-size:12px;color:#c77700;background:#fffde7;border-radius:8px;padding:7px 11px;border-left:3px solid var(--yellow)}
+
+.song-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);margin-bottom:12px;overflow:hidden}
+.song-card:hover{box-shadow:0 4px 18px rgba(0,0,0,.08)}
+.sc-head{display:flex;align-items:center;gap:9px;padding:12px 14px;cursor:pointer;user-select:none}
+.song-card.open .sc-head{border-bottom:1px solid var(--border)}
+.sc-num{width:26px;height:26px;border-radius:7px;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sc-info{flex:1}
+.sc-name{font-size:14px;font-weight:700}
+.sc-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.type-b{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px}
+.sc-pct{font-size:11px;color:var(--muted);white-space:nowrap}
+.sc-arr{color:var(--muted);font-size:14px;transition:transform .2s;margin-left:4px}
+.song-card.open .sc-arr{transform:rotate(180deg)}
+.sc-body{display:none}
+.song-card.open .sc-body{display:block}
+
+.vid-area{padding:12px 14px;border-bottom:1px solid var(--border);background:#fafafa}
+.vid-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
+.yt-wrap{border-radius:9px;overflow:hidden;background:#111;position:relative}
+.yt-ph{width:100%;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,#1a1a2e,#2d1b69)}
+.yt-ph-icon{font-size:32px}
+.yt-ph-txt{font-size:12px;color:rgba(255,255,255,.6);text-align:center;line-height:1.5}
+.link-row{display:flex;gap:5px;margin-top:7px}
+.link-inp{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-family:'Nunito',sans-serif;font-size:12px;outline:none;background:var(--card)}
+.link-inp:focus{border-color:var(--pink)}
+.link-btn{padding:7px 13px;border-radius:8px;border:none;background:var(--pink);color:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700}
+.link-btn.teal{background:var(--teal)}
+
+.steps-area{padding:12px 14px}
+.steps-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px}
+.step-row{display:flex;gap:9px;align-items:flex-start;margin-bottom:9px}
+.step-chk{width:20px;height:20px;border-radius:5px;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;margin-top:1px}
+.step-chk.done{background:var(--green);border-color:var(--green)}
+.step-chk.done::after{content:'✓';color:white;font-size:11px;font-weight:700}
+.step-content{flex:1}
+.sp-phase{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;display:inline-block;margin-bottom:3px}
+.sp-time{font-size:11px;color:var(--muted);margin-bottom:2px}
+.sp-text{font-size:13px;line-height:1.65;color:var(--text)}
+.step-row.done-row .sp-text{text-decoration:line-through;opacity:.4}
+.sp-tip{margin-top:5px;padding:6px 9px;background:var(--yellow-l);border-radius:7px;font-size:11px;color:#7a5c00;line-height:1.5;border-left:2px solid var(--yellow)}
+.vocab-chips{padding:9px 14px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:4px;background:#fafafa}
+.vc{padding:3px 9px;border-radius:14px;background:var(--blue-l);color:#1565c0;font-size:11px;font-weight:600;border:1px solid #bbdefb}
+
+/* right panel */
+.rp-sec{padding:13px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.rp-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px}
+.t-display{font-family:'Baloo 2',cursive;font-size:48px;font-weight:700;text-align:center;letter-spacing:2px;margin:4px 0 8px;line-height:1}
+.t-display.warn{color:var(--red);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.5}}
+.t-presets{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.t-pre{padding:4px 10px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:var(--muted);transition:all .15s}
+.t-pre:hover{border-color:var(--orange);color:var(--orange)}
+.t-btns{display:flex;gap:5px}
+.t-btn{flex:1;padding:8px;border-radius:9px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700}
+.t-go{background:var(--green);color:white}
+.t-stop{background:var(--red);color:white}
+.t-rst{background:var(--bg);color:var(--muted)}
+.sb-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.sb-btn{padding:9px 6px;border-radius:9px;border:1.5px solid transparent;cursor:pointer;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.sb-btn .si{font-size:18px}
+.sb-bell{background:#fff8e7;color:#8a6000;border-color:#ffd166}
+.sb-bell:hover{background:#ffd166}
+.sb-praise{background:var(--pink-l);color:var(--pink-d);border-color:var(--pink)}
+.sb-praise:hover{background:var(--pink);color:white}
+.sb-teal{background:var(--teal-l);color:var(--teal-d);border-color:var(--teal)}
+.sb-teal:hover{background:var(--teal);color:white}
+.sb-pulse{animation:sbp .35s}
+@keyframes sbp{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+.pr-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.pr-num{width:18px;height:18px;border-radius:4px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.pr-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.pr-bar{width:50px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;flex-shrink:0}
+.pr-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--purple));transition:width .4s}
+.pr-pct{font-size:10px;color:var(--muted);width:26px;text-align:right}
+.ai-assist{background:linear-gradient(135deg,var(--purple-l),var(--pink-l));padding:13px 14px;flex-shrink:0}
+.ai-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.ai-chip{padding:4px 10px;border-radius:12px;border:1px solid #d4a8f0;background:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:11px;color:#6a3fa0;transition:all .15s}
+.ai-chip:hover{background:var(--purple);color:white;border-color:var(--purple)}
+.ai-out{background:white;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.7;min-height:52px;white-space:pre-wrap;border:1px solid #e8d8f8;max-height:140px;overflow-y:auto}
+.ai-out.loading{color:var(--muted);font-style:italic}
+.ai-row{display:flex;gap:5px;margin-top:7px}
+.ai-inp{flex:1;padding:7px 10px;border:1px solid #d4a8f0;border-radius:7px;font-family:'Nunito',sans-serif;font-size:12px;outline:none;background:white}
+.ai-ask{padding:7px 12px;border-radius:7px;border:none;background:var(--purple);color:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700}
+.ai-ask:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
+.upl-snd{font-size:10px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card);cursor:pointer;color:var(--muted);font-family:'Nunito',sans-serif;display:block;width:100%;margin-top:5px;text-align:center}
+.sess-done-btn{width:100%;margin-top:8px;padding:7px;border-radius:9px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--muted);transition:all .15s}
+
+/* ═══════════════ VOCAB PAGE ═══════════════ */
+.vocab-page{padding:20px 24px;max-width:1100px;margin:0 auto}
+.vsess-sel{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.vsess-btn{padding:5px 12px;border-radius:16px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--muted);transition:all .15s}
+.vsess-btn:hover{border-color:var(--orange);color:var(--orange)}
+.vsess-btn.active{background:var(--orange);border-color:var(--orange);color:white}
+.fc-controls{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.fc-btn{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--muted);transition:all .15s}
+.fc-btn:hover{border-color:var(--orange);color:var(--orange)}
+.fc-btn.active{background:var(--orange);border-color:var(--orange);color:white}
+.fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:28px}
+.fc{background:var(--card);border:2px solid var(--border);border-radius:14px;aspect-ratio:.75;cursor:pointer;perspective:700px;transition:border-color .2s;position:relative}
+.fc:hover{border-color:var(--orange);box-shadow:0 4px 16px rgba(255,167,38,.15)}
+.fc-inner{width:100%;height:100%;transition:transform .55s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d;position:relative}
+.fc.flipped .fc-inner{transform:rotateY(180deg)}
+.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;gap:5px}
+.fc-back{transform:rotateY(180deg);background:linear-gradient(145deg,#fff8ee,#fff0f5)}
+.fc-img-area{width:100%;flex:1;display:flex;align-items:center;justify-content:center;border-radius:8px;overflow:hidden;background:var(--bg);min-height:0}
+.fc-img-area img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+.fc-emoji{font-size:42px;line-height:1}
+.fc-word{font-size:14px;font-weight:800;color:var(--text);text-align:center}
+.fc-vn-small{font-size:10px;color:var(--muted);text-align:center}
+.fc-back .fc-word{font-size:17px;color:var(--orange)}
+.fc-back .fc-vn-small{font-size:12px;color:#7a5500;font-weight:600}
+.fc-upload-overlay{position:absolute;bottom:5px;right:5px;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;opacity:0;transition:opacity .2s;z-index:2}
+.fc:hover .fc-upload-overlay{opacity:1}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(15,10,30,.9);z-index:150;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.lightbox.open{display:flex}
+.lb-card{width:min(360px,82vw);height:min(480px,66vh);perspective:900px;cursor:pointer}
+.lb-inner{width:100%;height:100%;transition:transform .6s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d;position:relative}
+.lb-card.flipped .lb-inner{transform:rotateY(180deg)}
+.lb-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px}
+.lb-face.back{transform:rotateY(180deg);background:linear-gradient(145deg,#fff8ee,#fff0f5)}
+.lb-face.front{background:var(--card)}
+.lb-img{width:100%;flex:1;border-radius:14px;overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center;min-height:0}
+.lb-img img{width:100%;height:100%;object-fit:cover;border-radius:14px}
+.lb-emoji{font-size:80px;line-height:1}
+.lb-word{font-family:'Baloo 2',cursive;font-size:30px;font-weight:800;color:var(--text);text-align:center}
+.lb-vn{font-size:17px;color:var(--muted);text-align:center}
+.lb-face.back .lb-word{color:var(--orange);font-size:34px}
+.lb-face.back .lb-vn{color:#7a5500;font-size:15px;font-weight:600}
+.lb-hint{font-size:13px;color:rgba(255,255,255,.5)}
+.lb-nav{display:flex;gap:14px;align-items:center}
+.lb-nav-btn{padding:9px 22px;border-radius:20px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700}
+.lb-nav-btn:hover{background:rgba(255,255,255,.25)}
+.lb-close{position:fixed;top:16px;right:20px;background:rgba(255,255,255,.15);border:none;color:white;font-size:22px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.lb-counter{font-size:13px;color:rgba(255,255,255,.6)}
+
+/* games */
+.games-section{margin-top:4px}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.game-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.game-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-2px);transition:all .2s}
+.gc-head{padding:13px 16px 10px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border)}
+.gc-icon{font-size:24px}
+.gc-name{font-size:14px;font-weight:700;flex:1}
+.gc-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px}
+.gc-body{padding:12px 16px}
+.gc-how{font-size:13px;color:var(--text);line-height:1.6;margin-bottom:7px}
+.gc-songs{font-size:11px;color:var(--muted);margin-bottom:10px}
+.gc-btn{width:100%;padding:8px;border-radius:9px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:white;transition:all .15s}
+.game-detail{display:none;margin-top:10px;background:var(--bg);border-radius:9px;padding:10px}
+.gd-step{display:flex;gap:8px;margin-bottom:5px;font-size:12px;line-height:1.5;align-items:flex-start}
+.gd-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0}
+
+/* camera */
+.cam-box{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:16px}
+.cam-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.cam-title{font-size:14px;font-weight:700;flex:1}
+.cam-start-btn{padding:7px 16px;border-radius:20px;border:none;background:var(--orange);color:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700}
+.cam-start-btn.stop{background:var(--red)}
+#cam-video{width:100%;border-radius:0;background:#111;display:block;max-height:200px;object-fit:cover}
+#cam-canvas{display:none}
+.cam-status{padding:8px 14px;font-size:12px;color:var(--muted);background:var(--bg);border-top:1px solid var(--border)}
+.cam-result{margin:10px 14px;padding:11px 13px;background:linear-gradient(135deg,#fff8ee,#fff0f5);border-radius:10px;border:1px solid #ffd6a0;font-size:13px;font-weight:600;min-height:48px;line-height:1.6}
+.cam-snap-btn{display:none;margin:8px 14px 14px;width:calc(100% - 28px);padding:9px;border-radius:10px;border:none;background:var(--orange);color:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700}
+
+/* ═══════════════ REWARD PAGE ═══════════════ */
+.reward-page{padding:20px 24px;max-width:1100px;margin:0 auto}
+.rw-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
+
+/* stars card */
+.stars-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:18px;text-align:center;margin-bottom:12px}
+.sc-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.star-big{font-family:'Baloo 2',cursive;font-size:68px;font-weight:800;color:var(--yellow);line-height:1;margin-bottom:10px}
+.star-btns{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.s-btn{padding:9px 14px;border-radius:20px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;transition:all .15s}
+.s-add{background:var(--yellow);color:#7a5500}
+.s-add:hover{background:#ffc107}
+.s-sub{background:var(--bg);border:1px solid var(--border);color:var(--muted)}
+.proj-open-btn{width:100%;margin-top:12px;padding:10px;border-radius:20px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;transition:all .15s}
+.proj-open-btn:hover{opacity:.9;transform:scale(1.02)}
+
+/* quick praise */
+.quick-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:14px}
+.qr-btn{width:100%;padding:9px 12px;border-radius:20px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px;text-align:left;transition:all .15s}
+.qr-btn:last-child{margin-bottom:0}
+.qr-btn:hover{filter:brightness(.95)}
+
+/* student grid */
+.stu-section{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:16px}
+.stu-sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.stu-sec-title{font-size:15px;font-weight:700;flex:1}
+.add-stu-btn{padding:6px 14px;border-radius:18px;border:none;background:var(--pink);color:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700}
+.stu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.stu-card{background:var(--bg);border-radius:var(--r);border:2px solid var(--border);padding:14px;cursor:pointer;transition:all .2s;position:relative;text-align:center}
+.stu-card:hover{border-color:var(--yellow);box-shadow:0 4px 16px rgba(255,213,79,.2)}
+.stu-avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-size:20px;font-weight:800;color:white;margin:0 auto 8px;overflow:hidden;position:relative;cursor:pointer}
+.stu-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.stu-cam-over{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;font-size:16px}
+.stu-avatar:hover .stu-cam-over{opacity:1}
+.stu-name{font-size:14px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stu-stars-disp{font-size:13px;color:var(--yellow)}
+.stu-del{position:absolute;top:5px;right:7px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);opacity:0;transition:opacity .15s}
+.stu-card:hover .stu-del{opacity:1}
+.stu-add-placeholder{background:var(--bg);border-radius:var(--r);border:2px dashed var(--border);padding:14px;cursor:pointer;text-align:center;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .15s;min-height:130px}
+.stu-add-placeholder:hover{border-color:var(--pink);color:var(--pink);background:var(--pink-l)}
+
+/* badges */
+.badges-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.badge-item{padding:10px 6px;border-radius:10px;border:1.5px solid var(--border);text-align:center;cursor:pointer;transition:all .15s;background:var(--card)}
+.badge-item:hover{border-color:var(--yellow);background:var(--yellow-l);transform:scale(1.04)}
+.badge-icon{font-size:24px;margin-bottom:3px}
+.badge-name{font-size:10px;font-weight:700;color:var(--muted)}
+
+/* history */
+.hist-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:14px;margin-top:14px}
+
+/* projector overlay */
+.proj-overlay{display:none;position:fixed;inset:0;z-index:200;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}
+.proj-overlay.show{display:flex}
+.proj-bg{position:absolute;inset:0;background:linear-gradient(135deg,#0d0221,#1a0545,#0a1540);animation:bgp 3s ease-in-out infinite alternate}
+@keyframes bgp{to{background:linear-gradient(135deg,#1a0545,#0a1540,#0d0221)}}
+.proj-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:10px}
+.proj-stu-img{width:150px;height:150px;border-radius:50%;border:6px solid rgba(255,213,79,.85);object-fit:cover;animation:pop .5s cubic-bezier(.17,.67,.35,1.2);box-shadow:0 0 60px rgba(255,213,79,.5);display:none}
+.proj-stars-big{font-size:90px;text-align:center;animation:pop .5s cubic-bezier(.17,.67,.35,1.2);filter:drop-shadow(0 0 20px rgba(255,213,79,.8))}
+.proj-stu-name{font-family:'Baloo 2',cursive;font-size:40px;font-weight:800;color:var(--yellow);text-shadow:0 0 30px rgba(255,213,79,.9);animation:slideup .5s ease-out .15s both;display:none}
+.proj-main-text{font-family:'Baloo 2',cursive;font-size:54px;font-weight:800;color:white;text-align:center;animation:slideup .5s ease-out .2s both;text-shadow:0 0 40px rgba(255,255,255,.4)}
+.proj-hint{font-size:15px;color:rgba(255,255,255,.4);margin-top:10px}
+@keyframes pop{0%{transform:scale(.2) rotate(-15deg);opacity:0}70%{transform:scale(1.12) rotate(2deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes slideup{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.confetti-piece{position:absolute;animation:conffall linear forwards;z-index:1}
+@keyframes conffall{to{transform:translateY(105vh) rotate(720deg);opacity:0}}
+
+/* ═══════════════ PROGRESS PAGE ═══════════════ */
+.prog-page{padding:20px 24px;max-width:1100px;margin:0 auto}
+.prog-tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:2px solid var(--border);padding-bottom:10px}
+.prog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.prog-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:14px;cursor:pointer;transition:all .15s}
+.prog-card:hover{box-shadow:0 3px 16px rgba(0,0,0,.08)}
+.pc-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.pc-num{width:28px;height:28px;border-radius:8px;background:var(--blue-l);color:var(--blue);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pc-title{font-size:13px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-ph{font-size:16px}
+.pc-bar-wrap{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px}
+.pc-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--purple));transition:width .5s}
+.pc-stats{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.pc-done{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.pc-done.yes{background:var(--green-l);color:var(--green-d)}
+.pc-done.no{background:var(--bg);color:var(--muted)}
+.spt{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:20px;overflow-x:auto}
+.spt-head{display:grid;grid-template-columns:28px 1fr repeat(10,26px);gap:3px;padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);min-width:480px}
+.spt-row{display:grid;grid-template-columns:28px 1fr repeat(10,26px);gap:3px;padding:7px 12px;border-bottom:1px solid var(--border);font-size:11px;align-items:center;min-width:480px}
+.spt-row:last-child{border-bottom:none}
+.spt-row:hover{background:var(--bg)}
+.spt-dot{width:20px;height:20px;border-radius:5px;margin:auto;display:flex;align-items:center;justify-content:center;font-size:10px}
+.spt-dot.d{background:var(--green-l);color:var(--green-d)}
+.spt-dot.p{background:var(--yellow-l);color:#f57f17}
+.spt-dot.n{background:var(--bg);color:var(--border)}
+
+/* student detail */
+.stu-detail-tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:2px solid var(--border);padding-bottom:10px}
+.stu-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.stu-detail-body{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.stu-detail-head{padding:16px 20px;background:linear-gradient(135deg,var(--yellow-l),var(--pink-l));border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px}
+.sd-av{width:52px;height:52px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;color:white;flex-shrink:0}
+.sd-av img{width:100%;height:100%;object-fit:cover}
+.sd-name{font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;flex:1}
+.sd-stars{font-size:18px;color:var(--yellow)}
+
+/* vocab memory table in student detail */
+.vocab-mem-section{padding:16px 20px;border-bottom:1px solid var(--border)}
+.vm-title{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.vm-legend{display:flex;gap:8px;flex-wrap:wrap;font-size:11px}
+.vm-leg{padding:3px 10px;border-radius:12px;font-weight:600}
+.vm-songs-block{margin-bottom:14px}
+.vm-song-name{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;padding:4px 8px;background:var(--bg);border-radius:6px;display:flex;align-items:center;gap:6px}
+.vm-vocab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:5px;margin-bottom:2px}
+.vm-word-btn{padding:5px 9px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;color:var(--muted);transition:all .15s;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:4px}
+.vm-word-btn:hover{border-color:var(--blue);color:var(--blue)}
+.vm-word-btn.mem-good{background:var(--green-l);border-color:var(--green);color:var(--green-d)}
+.vm-word-btn.mem-review{background:var(--yellow-l);border-color:var(--yellow);color:#7a5c00}
+.vm-word-btn.mem-bad{background:var(--red-l);border-color:var(--red);color:#c62828}
+.vm-icon{font-size:13px;flex-shrink:0}
+
+/* per-session accordion */
+.sess-acc{border-bottom:1px solid var(--border)}
+.sess-acc-head{display:flex;align-items:center;gap:9px;padding:12px 20px;cursor:pointer;user-select:none}
+.sess-acc-head:hover{background:var(--bg)}
+.sa-num{width:24px;height:24px;border-radius:6px;background:var(--blue-l);color:var(--blue);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sa-title{font-size:14px;font-weight:700;flex:1}
+.sa-stars{font-size:14px}
+.sa-arr{color:var(--muted);font-size:13px;transition:transform .2s}
+.sess-acc-body{display:none;padding:0 20px 14px}
+.sess-acc-body.open{display:block}
+.star-picker{display:flex;gap:5px;margin-bottom:10px;align-items:center}
+.sp-star{font-size:24px;cursor:pointer;opacity:.22;transition:all .1s;user-select:none}
+.sp-star.lit{opacity:1}
+.sp-star:hover{transform:scale(1.2)}
+.act-ticks{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.act-tick{padding:5px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;color:var(--muted);transition:all .15s;user-select:none}
+.act-tick.ticked{background:var(--green-l);border-color:var(--green);color:var(--green-d)}
+.note-inp{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:9px;font-family:'Nunito',sans-serif;font-size:13px;resize:vertical;min-height:58px;outline:none;line-height:1.6}
+.note-inp:focus{border-color:var(--pink)}
+
+/* export */
+.exp-section{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:18px;margin-bottom:16px}
+.exp-btn{padding:10px 20px;border-radius:10px;border:none;background:var(--green);color:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;margin-right:8px;margin-bottom:8px;transition:all .15s}
+.exp-btn:hover{filter:brightness(.93)}
+.exp-btn.blue{background:var(--blue)}
+.exp-btn.orange{background:var(--orange)}
+.exp-btn.purple{background:var(--purple)}
+
+/* modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:100;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-box{background:var(--card);border-radius:var(--r);padding:22px;width:380px;max-width:96vw;box-shadow:0 8px 40px rgba(0,0,0,.22)}
+.modal-box h3{font-family:'Baloo 2',cursive;font-size:18px;margin-bottom:5px}
+.modal-box p{font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6}
+.m-inp{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-family:'Nunito',sans-serif;font-size:14px;outline:none;margin-bottom:3px}
+.m-inp:focus{border-color:var(--pink)}
+.m-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.m-cancel{padding:8px 18px;border-radius:9px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px}
+.m-ok{padding:8px 18px;border-radius:9px;border:none;background:var(--pink);color:white;cursor:pointer;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700}
+
+/* stu modal */
+.stu-modal-box{background:var(--card);border-radius:var(--r);padding:0;width:720px;max-width:97vw;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.22)}
+.sm-head{padding:16px 20px;background:linear-gradient(135deg,var(--yellow-l),var(--pink-l));border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.sm-av{width:52px;height:52px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-size:20px;font-weight:800;color:white;flex-shrink:0;cursor:pointer;position:relative}
+.sm-av img{width:100%;height:100%;object-fit:cover}
+.sm-av-over{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
+.sm-av:hover .sm-av-over{opacity:1}
+.sm-name{font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;flex:1}
+.sm-total{font-size:18px;color:var(--yellow)}
+.sm-close{padding:8px 16px;border-radius:9px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px}
+.sm-body{overflow-y:auto;flex:1}
+
+/* toast */
+.toast{position:fixed;bottom:18px;right:18px;background:var(--text);color:white;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:300}
+.toast.show{opacity:1;transform:translateY(0)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.modal-inp{width:100%;padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:'Nunito',sans-serif;font-size:13px;outline:none;margin-bottom:4px}
+.modal-inp:focus{border-color:var(--teal)}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.modal-btn-ok{padding:7px 18px;border:none;border-radius:8px;background:var(--teal);color:white;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+.modal-btn-cancel{padding:7px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);font-family:'Nunito',sans-serif;font-size:13px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <span class="logo">🌟 Speak <em>&</em> Shine</span>
+  <button class="nav-tab active t-lesson" onclick="goPage('lesson')">📚 Bài học</button>
+  <button class="nav-tab t-vocab" onclick="goPage('vocab')">🃏 Vocab Lab</button>
+  <button class="nav-tab t-reward" onclick="goPage('reward')">⭐ Khen thưởng</button>
+  <button class="nav-tab t-progress" onclick="goPage('progress')">📊 Tiến độ</button>
+  <div class="nav-spacer"></div>
+  <button class="key-btn" id="fb-btn" onclick="openModal('firebase-modal')" title="Đồng bộ Firebase">
+    <div class="key-dot" id="fb-dot"></div><span id="fb-label">☁️ Sync</span>
+  </button>
+  <button class="key-btn" id="key-btn" onclick="openModal('api-modal')">
+    <div class="key-dot" id="key-dot"></div><span>API Key</span>
+  </button>
+</div>
+
+<!-- ══ LESSON PAGE ══ -->
+<div class="page active" id="page-lesson">
+  <div class="lesson-layout">
+    <div class="lesson-feed" id="lesson-feed">
+      <div class="sess-bar" id="sess-bar"></div>
+      <div id="sess-content"></div>
+    </div>
+    <div class="lesson-right">
+      <div class="rp-sec">
+        <div class="rp-title">⏱ Timer</div>
+        <div class="t-presets">
+          <button class="t-pre" onclick="setTimer(120)">2'</button>
+          <button class="t-pre" onclick="setTimer(300)">5'</button>
+          <button class="t-pre" onclick="setTimer(420)">7'</button>
+          <button class="t-pre" onclick="setTimer(480)">8'</button>
+          <button class="t-pre" onclick="setTimer(600)">10'</button>
+          <button class="t-pre" onclick="setTimer(720)">12'</button>
+        </div>
+        <div class="t-display" id="t-disp">05:00</div>
+        <div class="t-btns">
+          <button class="t-btn t-go" id="t-btn" onclick="toggleTimer()">▶ Start</button>
+          <button class="t-btn t-rst" onclick="resetTimer()">↺</button>
+        </div>
+        <div id="t-lbl" style="text-align:center;font-size:11px;color:var(--muted);margin-top:4px"></div>
+      </div>
+      <div class="rp-sec" style="flex:none">
+        <div class="rp-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>🔔 Classroom Sounds</span>
+          <button onclick="addSoundSlot()" style="font-size:10px;padding:2px 8px;border-radius:8px;border:1px solid var(--teal);background:var(--teal-l);color:var(--teal-d);cursor:pointer;font-family:Nunito,sans-serif;font-weight:700">+ Thêm</button>
+        </div>
+        <div id="sound-slots"></div>
+      </div>
+      <div class="rp-sec" style="flex:1;overflow-y:auto">
+        <div class="rp-title">📊 Tiến độ buổi</div>
+        <div id="rp-prog"></div>
+        <button class="sess-done-btn" id="sess-done-btn" onclick="markSessDone()">Đánh dấu buổi xong ✓</button>
+      </div>
+      <div class="ai-assist">
+        <div class="rp-title" style="color:#6a3fa0">✨ Gemini</div>
+        <div class="ai-chips">
+          <button class="ai-chip" onclick="aiQ('tips')">💡 Mẹo</button>
+          <button class="ai-chip" onclick="aiQ('diff')">👶 HS khó</button>
+          <button class="ai-chip" onclick="aiQ('game')">🎮 Game</button>
+          <button class="ai-chip" onclick="aiQ('msg')">📱 PH</button>
+        </div>
+        <div class="ai-out" id="ai-out">Hỏi Gemini...</div>
+        <div class="ai-row">
+          <input class="ai-inp" id="ai-inp" placeholder="Hỏi tự do...">
+          <button class="ai-ask" id="ai-ask" onclick="aiCustom()">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VOCAB PAGE ══ -->
+<div class="page" id="page-vocab">
+  <div class="vocab-page">
+    <h2 style="font-family:'Baloo 2',cursive;font-size:20px;color:var(--orange);margin-bottom:3px">🃏 Flashcard Từ Vựng</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Hover thẻ → nhấn 📷 upload ảnh. Nhấn thẻ → xem to. Chọn buổi → thẻ tự chia nhóm theo mục tiêu tịnh tiến.</p>
+    <div class="vsess-sel" id="vsess-sel"></div>
+    <div id="fc-target-banner" style="display:none;margin-bottom:10px;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;border:1.5px solid #ccc"></div>
+    <div class="fc-controls">
+      <button class="fc-btn" onclick="fcShuffle()">🔀 Trộn</button>
+      <button class="fc-btn" onclick="fcFlipAll()">↩ Lật tất cả</button>
+      <button class="fc-btn" id="fc-target-only-btn" onclick="toggleTargetOnly()" style="display:none">🎯 Chỉ từ cần nhớ</button>
+      <button class="fc-btn" style="background:var(--pink);color:white;border-color:var(--pink)" onclick="openAddCardModal()">+ Thêm thẻ</button>
+      <span id="fc-count" style="font-size:13px;color:var(--muted);margin-left:4px"></span>
+      <button class="fc-btn" onclick="resetFCImages()" style="margin-left:auto;font-size:12px">🗑 Xoá ảnh</button>
+    </div>
+    <div class="fc-grid" id="fc-grid"></div>
+    <hr style="border:none;border-top:2px solid var(--border);margin:4px 0 22px">
+
+    <h2 style="font-family:'Baloo 2',cursive;font-size:18px;color:var(--teal);margin-bottom:4px">🎡 Vòng Quay Từ Vựng</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Chọn buổi → tick những từ muốn quay → nhấn Quay! Từ đã quay mờ dần, quay hết tự reset.</p>
+    <div style="background:var(--card);border-radius:var(--r);border:2px solid var(--teal-l);overflow:hidden;margin-bottom:16px">
+      <div style="padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#f0faf8">
+        <select id="wheel-sess" onchange="initWheel()" style="padding:7px 11px;border-radius:9px;border:1px solid var(--border);font-family:Nunito,sans-serif;font-size:13px;font-weight:700;outline:none;background:var(--card)">
+          <option value="0">🌱 Buổi 1</option><option value="1">🌱 Buổi 2</option>
+          <option value="2">🔄 Buổi 3</option><option value="3">🔄 Buổi 4</option>
+          <option value="4">🗣️ Buổi 5</option><option value="5">🗣️ Buổi 6</option>
+          <option value="6">🗣️ Buổi 7</option><option value="7">🎯 Buổi 8</option>
+          <option value="8">🎯 Buổi 9</option><option value="9">🏆 Buổi 10</option>
+        </select>
+        <button onclick="wheelSelectTarget()" style="padding:5px 11px;border-radius:14px;border:1.5px solid var(--teal);background:var(--teal-l);color:var(--teal-d);cursor:pointer;font-family:Nunito,sans-serif;font-size:11px;font-weight:700">✅ Từ cần nhớ</button>
+        <button onclick="wheelSelectAll()" style="padding:5px 11px;border-radius:14px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-family:Nunito,sans-serif;font-size:11px;font-weight:700;color:var(--muted)">Tất cả</button>
+        <button onclick="wheelSelectNone()" style="padding:5px 11px;border-radius:14px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-family:Nunito,sans-serif;font-size:11px;font-weight:700;color:var(--muted)">Bỏ chọn</button>
+        <span id="wheel-sel-count" style="margin-left:auto;font-size:12px;color:var(--teal-d);font-weight:800"></span>
+      </div>
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:#fafafa">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">Tick từ muốn đưa vào vòng quay:</div>
+        <div id="wheel-word-picker" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;padding:20px 16px 12px;background:linear-gradient(160deg,#0d1b4a,#1a3a6b)">
+        <div style="position:relative;display:inline-block">
+          <div id="wheel-ptr" style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:24px solid #ffd166;z-index:10;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))"></div>
+          <canvas id="wheel-canvas" width="280" height="280" style="border-radius:50%;cursor:pointer;display:block;box-shadow:0 8px 32px rgba(0,0,0,.5)" onclick="spinWheel()"></canvas>
+        </div>
+        <div id="wheel-result" style="margin-top:16px;min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+          <div style="font-size:13px;color:rgba(255,255,255,.5)">Tick từ bên trên rồi nhấn Quay! ▲</div>
+        </div>
+      </div>
+      <div style="padding:11px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button onclick="spinWheel()" id="wheel-spin-btn" style="padding:8px 22px;border-radius:18px;border:none;background:var(--teal);color:white;cursor:pointer;font-family:Nunito,sans-serif;font-size:14px;font-weight:800">🎡 Quay!</button>
+        <button onclick="resetWheelUsed()" style="padding:8px 14px;border-radius:18px;border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-family:Nunito,sans-serif;font-size:12px;font-weight:700">🔄 Quay lại từ đầu</button>
+        <span id="wheel-spin-count" style="font-size:12px;color:rgba(255,255,255,.65);font-weight:700"></span>
+      </div>
+    </div>
+        <h2 style="font-family:'Baloo 2',cursive;font-size:18px;color:var(--teal);margin-bottom:12px">🎮 Game & Hoạt động</h2>
+    <div class="games-grid" id="games-grid"></div>
+  </div>
+</div>
+
+<!-- ══ REWARD PAGE ══ -->
+<div class="page" id="page-reward">
+  <div class="reward-page">
+    <h2 style="font-family:'Baloo 2',cursive;font-size:22px;color:var(--yellow);margin-bottom:4px">⭐ Khen thưởng & Học sinh</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Tặng sao cả lớp. Nhấn vào tên bé để ghi nhận xét từng buổi.</p>
+    <div class="rw-layout">
+      <div>
+        <div class="stars-card">
+          <div class="sc-label">⭐ Sao cả lớp</div>
+          <div class="star-big" id="star-count">0</div>
+          <div class="star-btns">
+            <button class="s-btn s-add" onclick="addStar(1)">+1 ⭐</button>
+            <button class="s-btn s-add" onclick="addStar(5)" style="background:#ffc107">+5 🌟</button>
+            <button class="s-btn s-sub" onclick="addStar(-1)">−1</button>
+          </div>
+          <button class="proj-open-btn" onclick="showProjector(null,stars+'  Stars! 🎉')">🎉 Chiếu lên màn hình</button>
+        </div>
+        <div class="quick-card">
+          <div class="sc-label" style="margin-bottom:10px">⚡ Khen nhanh</div>
+          <button class="qr-btn" style="background:var(--yellow-l);color:#7a5500;border:1px solid var(--yellow)" onclick="quickReward('🌟 Xuất sắc!',5)">🌟 Xuất sắc! (+5)</button>
+          <button class="qr-btn" style="background:var(--pink-l);color:var(--pink-d);border:1px solid var(--pink)" onclick="quickReward('👏 Tuyệt vời!',3)">👏 Tuyệt vời! (+3)</button>
+          <button class="qr-btn" style="background:var(--teal-l);color:var(--teal-d);border:1px solid var(--teal)" onclick="quickReward('💪 Cố gắng lên!',1)">💪 Cố gắng lên! (+1)</button>
+          <button class="qr-btn" style="background:var(--purple-l);color:var(--purple);border:1px solid var(--purple)" onclick="quickReward('🎵 Hát hay quá!',2)">🎵 Hát hay quá! (+2)</button>
+        </div>
+      </div>
+      <div>
+        <div class="stu-section">
+          <div class="stu-sec-head">
+            <span class="stu-sec-title">👨‍👩‍👧 Học sinh</span>
+            <button class="add-stu-btn" onclick="openModal('add-stu-modal')">+ Thêm bé</button>
+          </div>
+          <div class="stu-grid" id="stu-grid"></div>
+          <div class="badges-section">
+            <div class="sc-label" style="margin-bottom:9px">🏅 Tặng badge</div>
+            <div class="badge-grid" id="badge-grid"></div>
+          </div>
+        </div>
+        <div class="hist-card">
+          <div class="sc-label" style="margin-bottom:8px">📋 Lịch sử</div>
+          <div id="reward-hist" style="font-size:13px;color:var(--muted);max-height:140px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROGRESS PAGE ══ -->
+<div class="page" id="page-progress">
+  <div class="prog-page">
+    <h2 style="font-family:'Baloo 2',cursive;font-size:22px;color:var(--green);margin-bottom:4px">📊 Tiến độ & Nhận xét</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Tiến độ lớp · Nhận xét từng học sinh · Từ vựng từng bài</p>
+    <div class="prog-tabs" id="prog-tabs">
+      <button class="fc-btn active" id="ptab-class" onclick="switchProgTab('class',this)">📊 Lớp học</button>
+      <button class="fc-btn" id="ptab-students" onclick="switchProgTab('students',this)">👨‍👩‍👧 Nhận xét HS</button>
+      <button class="fc-btn" id="ptab-export" onclick="switchProgTab('export',this)">📤 Xuất báo cáo</button>
+    </div>
+    <div id="ptab-class-body">
+      <div class="prog-grid" id="prog-grid"></div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:10px">🎵 Bảng 13 bài × 10 buổi</div>
+      <div class="spt">
+        <div class="spt-head"><div>#</div><div>Bài hát</div><div>B1</div><div>B2</div><div>B3</div><div>B4</div><div>B5</div><div>B6</div><div>B7</div><div>B8</div><div>B9</div><div>B10</div></div>
+        <div id="spt-body"></div>
+      </div>
+    </div>
+    <div id="ptab-students-body" style="display:none">
+      <div class="stu-pills" id="stu-pills"></div>
+      <div id="stu-detail-area"></div>
+    </div>
+    <div id="ptab-export-body" style="display:none">
+
+      <!-- SYNC / SHARE SECTION -->
+      <div class="exp-section" style="margin-bottom:14px">
+        <div style="font-size:15px;font-weight:800;margin-bottom:4px">🔄 Đồng bộ dữ liệu giữa các GV</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Lưu toàn bộ <strong>học sinh · nhận xét · link YouTube · tiến độ buổi</strong> ra file JSON → GV khác mở file để import vào máy của họ.</div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <button class="exp-btn" onclick="exportFullData()" style="background:#26c6a0">💾 Xuất file dữ liệu (.json)</button>
+          <button class="exp-btn blue" onclick="document.getElementById('import-file-inp').click()">📂 Import file dữ liệu</button>
+          <input type="file" id="import-file-inp" accept=".json" style="display:none" onchange="importFullData(event)"/>
+        </div>
+
+        <div style="background:#f0faf8;border-radius:10px;padding:12px 14px;border:1.5px solid #26c6a044;font-size:12px;line-height:1.7;color:#2d3436">
+          <div style="font-weight:800;color:#00695c;margin-bottom:6px">📋 Hướng dẫn chia sẻ với GV khác:</div>
+          <div>1️⃣ GV A nhấn <strong>"Xuất file dữ liệu"</strong> → tải về file <code>speak-shine-data.json</code></div>
+          <div>2️⃣ Gửi file đó qua <strong>Zalo / email / USB</strong> cho GV B</div>
+          <div>3️⃣ GV B mở app → nhấn <strong>"Import file dữ liệu"</strong> → chọn file vừa nhận</div>
+          <div>4️⃣ Toàn bộ học sinh, nhận xét, link nhạc tự động load vào ✅</div>
+          <div style="margin-top:6px;color:#888">⚠ Import sẽ <strong>gộp</strong> dữ liệu (không xóa HS cũ). Ảnh HS đồng bộ qua <strong>Firebase Storage</strong> khi đã kết nối — upload 1 lần, tất cả GV thấy.</div>
+        </div>
+      </div>
+
+      <!-- IMPORT STATUS -->
+      <div id="import-status" style="display:none;margin-bottom:14px;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:700"></div>
+
+      <!-- QUICK COPY: YOUTUBE LINKS -->
+      <div class="exp-section" style="margin-bottom:14px">
+        <div style="font-size:14px;font-weight:800;margin-bottom:8px">🎵 Link YouTube đã lưu</div>
+        <div id="yt-links-summary" style="font-size:12px;line-height:1.9;color:var(--muted)"></div>
+        <button class="exp-btn blue" onclick="copyYTLinks()" style="margin-top:8px;font-size:12px;padding:6px 14px">📋 Copy tất cả link</button>
+      </div>
+
+      <!-- PDF + AI -->
+      <div class="exp-section">
+        <div style="font-size:14px;font-weight:800;margin-bottom:8px">📄 Báo cáo & Tin nhắn PH</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button class="exp-btn" onclick="exportPDF('all')">📄 PDF toàn lớp</button>
+          <button class="exp-btn purple" onclick="exportPDF('students')">👨‍👩‍👧 PDF từng HS</button>
+          <button class="exp-btn orange" onclick="genParentMsg()">📱 Tin nhắn PH (AI)</button>
+        </div>
+      </div>
+
+      <div id="parent-msg-out" style="display:none;background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:16px;white-space:pre-wrap;font-size:14px;line-height:1.7;margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECTOR -->
+<div class="proj-overlay" id="proj-overlay" onclick="hideProjector()">
+  <div class="proj-bg"></div>
+  <div class="proj-content">
+    <img id="proj-stu-img" src="" alt="" class="proj-stu-img">
+    <div class="proj-stars-big" id="proj-stars">⭐</div>
+    <div class="proj-stu-name" id="proj-stu-name"></div>
+    <div class="proj-main-text" id="proj-text">Tuyệt vời!</div>
+    <div class="proj-hint">Nhấn bất kỳ để đóng</div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<!-- ══ FIREBASE MODAL ══ -->
+<div class="modal-bg" id="firebase-modal">
+  <div class="modal-box" style="max-width:480px">
+    <h3>☁️ Đồng bộ dữ liệu — Firebase</h3>
+    <div id="fb-status-box" style="display:none;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;margin-bottom:12px"></div>
+
+    <!-- Chưa kết nối -->
+    <div id="fb-setup-area">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+        Tất cả GV dùng chung <strong>1 Firebase project</strong> → dữ liệu tự đồng bộ real-time.<br>
+        Setup 1 lần, dùng mãi mãi.
+      </p>
+
+      <!-- Hướng dẫn setup -->
+      <details style="margin-bottom:12px">
+        <summary style="cursor:pointer;font-size:12px;font-weight:700;color:var(--blue)">📋 Hướng dẫn lấy Firebase config (5 phút)</summary>
+        <div style="font-size:12px;line-height:1.9;color:var(--muted);margin-top:8px;background:#f8f9fa;border-radius:8px;padding:10px">
+          1. Vào <a href="https://console.firebase.google.com" target="_blank" style="color:var(--blue)">console.firebase.google.com</a> → Đăng nhập Gmail<br>
+          2. Nhấn <strong>"Add project"</strong> → đặt tên (VD: speak-shine-lop1) → Continue<br>
+          3. Vào <strong>Firestore Database</strong> → Create database → <strong>Start in test mode</strong> → Next → Enable<br>
+          3b. Vào <strong>Storage</strong> → Get started → Start in test mode → Done<br>
+          4. Vào ⚙️ <strong>Project Settings</strong> → tab "Your apps" → nhấn icon <strong>&lt;/&gt;</strong> (Web)<br>
+          5. Đặt tên app bất kỳ → Register → Copy toàn bộ <code>firebaseConfig = { ... }</code><br>
+          6. Paste vào ô bên dưới → Kết nối
+        </div>
+      </details>
+
+      <label style="font-size:12px;font-weight:700;color:var(--muted)">Tên lớp (để phân biệt nhiều lớp)</label>
+      <input id="fb-class-id" class="m-inp" placeholder="VD: fairyhome_lop1_2025" style="margin-bottom:8px;font-family:monospace"/>
+
+      <label style="font-size:12px;font-weight:700;color:var(--muted)">Firebase Config (paste cả đoạn <code>{ apiKey: ... }</code>)</label>
+      <textarea id="fb-config-inp" class="m-inp" rows="5" placeholder='{ "apiKey": "AIza...", "authDomain": "...", "projectId": "...", ... }' style="font-family:monospace;font-size:11px;resize:vertical"></textarea>
+
+      <div class="m-btns" style="margin-top:10px">
+        <button class="m-cancel" onclick="closeModal('firebase-modal')">Đóng</button>
+        <button class="m-ok" id="fb-connect-btn" onclick="connectFirebase()">🔗 Kết nối</button>
+      </div>
+    </div>
+
+    <!-- Đã kết nối -->
+    <div id="fb-connected-area" style="display:none">
+      <div style="text-align:center;padding:10px 0 14px">
+        <div style="font-size:32px">✅</div>
+        <div style="font-weight:800;font-size:15px;margin:6px 0 2px" id="fb-connected-label"></div>
+        <div style="font-size:12px;color:var(--muted)" id="fb-sync-time">Chưa sync</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+        <button class="m-ok" onclick="fbPushAll()" style="width:100%">⬆️ Đẩy dữ liệu lên cloud</button>
+        <button class="m-ok" onclick="fbPullAll()" style="background:var(--blue);width:100%">⬇️ Tải dữ liệu từ cloud về</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);background:#f8f9fa;border-radius:8px;padding:8px 10px;line-height:1.7;margin-bottom:12px">
+        💡 <strong>Đẩy lên</strong>: lưu dữ liệu máy bạn lên cloud → GV khác tải về.<br>
+        💡 <strong>Tải về</strong>: lấy dữ liệu mới nhất từ cloud về máy bạn.<br>
+        🔄 App cũng <strong>tự lắng nghe</strong> thay đổi real-time khi GV khác lưu.
+      </div>
+      <div class="m-btns">
+        <button class="m-cancel" style="font-size:11px" onclick="fbDisconnect()">🔌 Ngắt kết nối</button>
+        <button class="m-cancel" onclick="closeModal('firebase-modal')">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="api-modal">
+  <div class="modal-box">
+    <h3>🔑 Gemini API Key</h3>
+    <p>Miễn phí tại <strong>aistudio.google.com/apikey</strong>. Lưu trong máy bạn.</p>
+    <input class="m-inp" id="api-key-inp" placeholder="AIzaSy...">
+    <div class="m-btns">
+      <button class="m-cancel" onclick="closeModal('api-modal')">Huỷ</button>
+      <button class="m-ok" onclick="saveApiKey()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="add-stu-modal">
+  <div class="modal-box">
+    <h3>👶 Thêm học sinh</h3>
+    <p>Mỗi tên một dòng — có thể thêm nhiều bé cùng lúc.</p>
+    <textarea class="m-inp" id="add-stu-inp" placeholder="Minh Anh&#10;Bảo Nam&#10;Gia Linh" style="min-height:110px;resize:vertical"></textarea>
+    <div class="m-btns">
+      <button class="m-cancel" onclick="closeModal('add-stu-modal')">Huỷ</button>
+      <button class="m-ok" onclick="confirmAddStudents()">✅ Thêm bé</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="badge-pick-modal">
+  <div class="modal-box">
+    <h3 id="badge-pick-title">🏅 Tặng badge cho bé nào?</h3>
+    <div id="badge-pick-list"></div>
+    <div class="m-btns">
+      <button class="m-cancel" onclick="closeModal('badge-pick-modal')">Huỷ</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="stu-modal">
+  <div class="stu-modal-box">
+    <div class="sm-head">
+      <div class="sm-av" id="sm-av" onclick="uploadStuPhotoModal()">
+        <div class="sm-av-over">📷</div>
+      </div>
+      <div class="sm-name" id="sm-name"></div>
+      <div class="sm-total" id="sm-total"></div>
+      <button class="sm-close" onclick="closeStuModal()">✕ Đóng</button>
+    </div>
+    <div class="sm-body" id="sm-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+//  DATA — Songs & Sessions
+// ════════════════════════════════════════════
+const SONGS={
+  1:{name:"Rain, rain, go away",vocab:[{en:"rain",vn:"mưa"},{en:"Daddy",vn:"ba"},{en:"Mommy",vn:"mẹ"},{en:"Brother",vn:"anh/em"},{en:"play",vn:"chơi"},{en:"go away",vn:"đi đi"}],yt:"",drive:"",steps:[{ph:"Thẻ từ",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"Giơ thẻ từng từ: rain 🌧️ Daddy 👨 Mommy 👩 Brother 👦. Đọc to 2 lần, HS repeat tập thể.",tip:"Chỉ 2 lần/từ. Repeat tập thể — không chờ từng bé."},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. GV hát cùng, dùng tay minh họa mưa rơi. HS nghe bắt chước tự nhiên.",tip:"GV hát to, cơ thể tích cực. Nhìn HS, không nhìn màn hình."},{ph:"Hát lần 2",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Hát lại. GV dừng trước từ 'DADDY' — chờ 3 giây xem HS tự điền.",tip:"Không ép. Nếu HS im, GV điền tiếp và cười."},{ph:"Chuyển bài",t:"1'",c:"#e8f5e9",ct:"#2e7d32",txt:"Vỗ tay 👏 Chuyển bài. Không game — bài gia đình không có từ để test."}]},
+  2:{name:"Ten little dinosaurs",vocab:[{en:"one",vn:"một"},{en:"two",vn:"hai"},{en:"three",vn:"ba"},{en:"four",vn:"bốn"},{en:"five",vn:"năm"},{en:"six",vn:"sáu"},{en:"seven",vn:"bảy"},{en:"eight",vn:"tám"},{en:"nine",vn:"chín"},{en:"ten",vn:"mười"},{en:"dinosaur",vn:"khủng long"}],yt:"",drive:"",steps:[{ph:"Thẻ từ",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"Trải thẻ số 1-10. GV chỉ từng thẻ, đọc to: ONE TWO THREE. HS repeat và đếm ngón tay.",tip:"Đếm ngón tay cùng lúc — trẻ học đếm qua ngón tay rất nhanh."},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. GV đứng gần màn hình, giơ thẻ số tương ứng khi hát.",tip:""},{ph:"Game: Slap the card",t:"4'",c:"#fff3e0",ct:"#e65100",txt:"Trải thẻ 1-5 ra sàn. GV nói số → HS chạy vỗ đúng thẻ. 3-4 lượt, sau đó nâng lên 1-10.",tip:"Cả lớp đồng thanh đọc số khi bé vỗ đúng."},{ph:"Hát lại",t:"2'",c:"#fce4ec",ct:"#880e4f",txt:"Cả lớp đếm ngón tay theo bài hát. GV dừng trước số — HS điền."}]},
+  3:{name:"What is it?",vocab:[{en:"kite",vn:"diều"},{en:"robot",vn:"rô-bốt"},{en:"ball",vn:"quả bóng"},{en:"doll",vn:"búp bê"},{en:"blocks",vn:"khối xếp hình"},{en:"teddy bear",vn:"gấu bông"}],yt:"",drive:"",steps:[{ph:"Thẻ từ",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"Giơ thẻ đồ chơi: kite 🪁 robot 🤖 ball ⚽ doll 🪆 blocks 🧱 teddy bear 🧸. Hỏi: 'What is it?'",tip:""},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. GV hát và giơ thẻ đồ chơi đúng lúc từ xuất hiện.",tip:""},{ph:"Game: Jump & say",t:"4'",c:"#fff3e0",ct:"#e65100",txt:"GV giơ thẻ → HS nhảy + nói tên đồ chơi. Chơi nhanh 6-8 thẻ liên tiếp.",tip:"GV cũng nhảy cùng! Năng lượng cao = ghi nhớ tốt."},{ph:"Hát lại",t:"2'",c:"#fce4ec",ct:"#880e4f",txt:"Hát lần 2 — HS hỏi đáp 'What is it?' theo cặp trong lúc hát."}]},
+  4:{name:"My teddy bear",vocab:[{en:"eyes",vn:"mắt"},{en:"ears",vn:"tai"},{en:"nose",vn:"mũi"},{en:"arms",vn:"tay"},{en:"legs",vn:"chân"},{en:"love",vn:"yêu thương"}],yt:"",drive:"",steps:[{ph:"Thẻ từ",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"Giơ thẻ bộ phận: eyes 👀 ears 👂 nose 👃 arms 💪 legs 🦵. HS chỉ vào người mình khi nghe.",tip:"GV nói + chỉ → HS làm theo. Học bằng cơ thể."},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. GV hát và chỉ từng bộ phận cơ thể theo lời bài.",tip:""},{ph:"Game: Touch & say",t:"4'",c:"#fff3e0",ct:"#e65100",txt:"'Touch your EYES!' → HS chỉ vào mắt + lặp lại. Tiếp: ears, nose, arms, legs. Tăng tốc dần.",tip:""},{ph:"Hát lại",t:"2'",c:"#fce4ec",ct:"#880e4f",txt:"Hát lại — HS chỉ vào cơ thể mình theo đúng lời bài."}]},
+  5:{name:"This is the way",vocab:[{en:"wash face",vn:"rửa mặt"},{en:"brush teeth",vn:"đánh răng"},{en:"comb hair",vn:"chải tóc"},{en:"get dressed",vn:"mặc quần áo"},{en:"go to school",vn:"đi học"},{en:"morning",vn:"buổi sáng"}],yt:"",drive:"",steps:[{ph:"Thẻ từ",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"Thẻ hành động buổi sáng theo thứ tự. Mime từng hành động khi giơ thẻ.",tip:"HS tự mime theo — không cần nói."},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. GV mime từng hành động theo đúng lời bài. HS đứng xem bắt chước.",tip:""},{ph:"TPR đầy đủ",t:"4'",c:"#fff3e0",ct:"#e65100",txt:"Hát lại + GV hô lệnh: 'Wash face!' → HS mime. Cả 5 hành động, tốc độ tăng dần.",tip:"Cuối: HS tự mime không cần GV hô."},{ph:"Hát lại",t:"2'",c:"#fce4ec",ct:"#880e4f",txt:"Hát toàn bài — HS vừa hát vừa mime."}]},
+  6:{name:"Alphabet chant",vocab:[{en:"A",vn:"Chữ A"},{en:"B",vn:"Chữ B"},{en:"C",vn:"Chữ C"},{en:"D",vn:"Chữ D"},{en:"E-Z",vn:"Chữ E đến Z"}],yt:"",drive:"",steps:[{ph:"Bảng chữ cái",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"GV chỉ bảng A→Z. Cả lớp đọc theo chậm nhịp nhàng.",tip:"Chỉ và đọc. Không giải thích."},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. GV chỉ từng chữ trên bảng khi xuất hiện trong bài.",tip:""},{ph:"Hát lần 2",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Hát lại — GV hát nhỏ dần, nhường lớp hát to. HS tự nhìn bảng đọc.",tip:""},{ph:"Game: Tìm thẻ",t:"3'",c:"#fff3e0",ct:"#e65100",txt:"Trải thẻ chữ cái. GV hô chữ → HS chạy tìm giơ lên. Chọn A,B,O,S,T,Z trước.",tip:""}]},
+  7:{name:"Yes, I can",vocab:[{en:"fly",vn:"bay"},{en:"stomp",vn:"giậm chân"},{en:"swim",vn:"bơi"},{en:"climb",vn:"leo trèo"},{en:"run",vn:"chạy"},{en:"jump",vn:"nhảy"},{en:"sing",vn:"hát"},{en:"dance",vn:"nhảy múa"}],yt:"",drive:"",steps:[{ph:"Thẻ từ",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"Giơ thẻ + mime: fly 🦋 stomp 🦶 swim 🏊 climb 🧗 run 🏃 jump 🦘 sing 🎤 dance 💃.",tip:"HS mime ngay khi thấy thẻ."},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. GV hát và mime tất cả hành động.",tip:""},{ph:"Game: Jump & say",t:"3'",c:"#fff3e0",ct:"#e65100",txt:"GV giơ thẻ → HS nhảy + nói 'Yes, I can [fly]!' Nhanh dần.",tip:""},{ph:"Can/Can't vote",t:"3'",c:"#fff3e0",ct:"#e65100",txt:"GV giơ thẻ con vật → 'Can it fly?' → HS giơ tay YES/NO. Thảo luận vui.",tip:"Không có đáp án sai."}]},
+  8:{name:"Do you like vegetables?",vocab:[{en:"broccoli",vn:"bông cải xanh"},{en:"tomato",vn:"cà chua"},{en:"pepper",vn:"ớt chuông"},{en:"mushroom",vn:"nấm"},{en:"cabbage",vn:"bắp cải"},{en:"carrot",vn:"cà rốt"},{en:"potato",vn:"khoai tây"},{en:"eggplant",vn:"cà tím"}],yt:"",drive:"",steps:[{ph:"Thẻ từ",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"Giơ thẻ rau: broccoli 🥦 tomato 🍅 pepper 🫑 mushroom 🍄 carrot 🥕 potato 🥔...",tip:"Thêm biểu cảm: 'Mmm, carrot! Yummy! 😋'"},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. GV giơ thẻ rau đúng lúc xuất hiện trong bài.",tip:""},{ph:"Game: Slap the card",t:"3'",c:"#fff3e0",ct:"#e65100",txt:"Trải thẻ rau. GV nói tên → HS chạy vỗ đúng. 2-3 vòng.",tip:""},{ph:"Hỏi đáp",t:"3'",c:"#f3e5f5",ct:"#6a1b9a",txt:"'Do you like carrots?' → HS: 'Yes, I do!' / 'No, I don't!' GV phản ứng vui.",tip:"Tạo kết nối cảm xúc thật."}]},
+  9:{name:"How old are you?",vocab:[{en:"How old are you?",vn:"Bạn bao nhiêu tuổi?"},{en:"I am ___ years old",vn:"Tôi ___ tuổi"},{en:"three",vn:"ba tuổi"},{en:"four",vn:"bốn tuổi"},{en:"five",vn:"năm tuổi"},{en:"six",vn:"sáu tuổi"}],yt:"",drive:"",steps:[{ph:"Thẻ từ",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"GV hỏi mẫu: 'How old are you?' — tự trả lời: 'I am THREE years old!' giơ 3 ngón.",tip:"Dùng ngón tay."},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. GV hát và giơ ngón tay tương ứng.",tip:""},{ph:"Game: Passing ball",t:"4'",c:"#fff3e0",ct:"#e65100",txt:"HS ngồi vòng tròn. Bóng đến ai → trả lời 'I am ___ years old!'",tip:"Cả lớp hỗ trợ nếu bé quên."},{ph:"Hát lại",t:"2'",c:"#fce4ec",ct:"#880e4f",txt:"GV dừng trước số tuổi — chờ HS điền vào."}]},
+  10:{name:"Where?",vocab:[{en:"Where is...?",vn:"... ở đâu?"},{en:"Here I am!",vn:"Tôi đây!"},{en:"How are you?",vn:"Bạn có khỏe?"},{en:"Very well",vn:"Rất khỏe"}],yt:"",drive:"",steps:[{ph:"Thẻ từ",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"GV nói mẫu: 'Where is [tên bé]?' → bé đứng 'Here I am!' Làm mẫu 2-3 lần.",tip:"Gọi tên thật HS."},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. HS giơ tay khi nghe 'Here I am!'",tip:""},{ph:"Roleplay",t:"4'",c:"#f3e5f5",ct:"#6a1b9a",txt:"Cặp đôi: A hỏi 'Where is [tên B]?' → B đứng 'Here I am! How are you?' → A: 'Very well!'",tip:"GV đi quanh, nghe và gật đầu."},{ph:"Hát lại",t:"2'",c:"#fce4ec",ct:"#880e4f",txt:"GV hát tên thật thay cho tên trong bài."}]},
+  11:{name:"What's your name?",vocab:[{en:"Hello",vn:"Xin chào"},{en:"What's your name?",vn:"Tên bạn là gì?"},{en:"My name is...",vn:"Tên tôi là..."},{en:"Nice to meet you",vn:"Rất vui gặp bạn"}],yt:"",drive:"",steps:[{ph:"Thẻ từ",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"GV bắt tay từng bé: 'Hello! What's your name?' → 'Nice to meet you!'",tip:"Bắt tay thật. Thể chất = ghi nhớ."},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. GV hát và vẫy tay chào.",tip:""},{ph:"Game: Passing ball",t:"4'",c:"#fff3e0",ct:"#e65100",txt:"Bóng đến ai → tự giới thiệu: 'My name is [tên]. Nice to meet you!'",tip:"15-20 giây/bé. Giữ nhịp nhanh."},{ph:"Hát lại",t:"2'",c:"#fce4ec",ct:"#880e4f",txt:"GV hát nhỏ dần — HS hát to hơn."}]},
+  12:{name:"Brown bear, what do you see?",vocab:[{en:"brown bear",vn:"gấu nâu"},{en:"red bird",vn:"chim đỏ"},{en:"yellow duck",vn:"vịt vàng"},{en:"blue horse",vn:"ngựa xanh"},{en:"green frog",vn:"ếch xanh"},{en:"white dog",vn:"chó trắng"},{en:"black sheep",vn:"cừu đen"},{en:"goldfish",vn:"cá vàng"}],yt:"",drive:"",steps:[{ph:"Thẻ từ",t:"2'",c:"#e3f2fd",ct:"#1565c0",txt:"Giơ thẻ màu + con vật. Hỏi 'What color?' rồi 'What animal?'",tip:""},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. GV giơ thẻ đúng thứ tự bài.",tip:""},{ph:"Passing ball",t:"3'",c:"#fff3e0",ct:"#e65100",txt:"Bóng đến ai → GV giơ thẻ → bé nói màu + con vật. Nhanh dần.",tip:""},{ph:"Đọc toàn bài",t:"3'",c:"#f3e5f5",ct:"#6a1b9a",txt:"GV chỉ thẻ không nói → HS tự đọc. Cuối: cả lớp đọc như story.",tip:""}]},
+  13:{name:"Clap your hands",vocab:[{en:"stand up",vn:"đứng lên"},{en:"sit down",vn:"ngồi xuống"},{en:"clap",vn:"vỗ tay"},{en:"stomp",vn:"giậm chân"},{en:"jump",vn:"nhảy"},{en:"roll",vn:"lăn"},{en:"crawl",vn:"bò"},{en:"turn around",vn:"quay tròn"}],yt:"",drive:"",steps:[{ph:"TPR nhanh",t:"1'",c:"#e3f2fd",ct:"#1565c0",txt:"GV hô lệnh + mime: Stand up! Sit down! Clap! Stomp! HS làm theo ngay.",tip:""},{ph:"Hát lần 1",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Bật video. Cả lớp đứng! GV làm đúng hành động.",tip:"Cả lớp đứng — bài vận động."},{ph:"HS dẫn",t:"3'",c:"#fce4ec",ct:"#880e4f",txt:"Mời 1 bé lên làm leader — dẫn cả lớp. Rotate mỗi 30 giây.",tip:""},{ph:"Speed challenge",t:"3'",c:"#fff3e0",ct:"#e65100",txt:"GV hô ngẫu nhiên nhanh dần. Ai sai = ngồi xuống. Bé cuối đứng = winner 🏆",tip:""}]}
+};
+
+const SESSIONS=[
+  {id:1,name:"Buổi 1",topic:"Chào hỏi & Gia đình",phase:"🌱",pLabel:"Input",obj:"Giới thiệu lần đầu 8 bài — ưu tiên NGHE, không ép output",note:"GV hát nhiều, trẻ nghe. Bình thường nếu HS chưa nói được.",songs:[1,2,3,4,11,9,5,13],types:["LẦN ĐẦU","LẦN ĐẦU","LẦN ĐẦU","LẦN ĐẦU","LẦN ĐẦU","LẦN ĐẦU","LẦN ĐẦU","LẦN ĐẦU"],done:false},
+  {id:2,name:"Buổi 2",topic:"Ôn lại + Bổ sung mới",phase:"🌱",pLabel:"Input",obj:"Spiral lần 2 bài 1,2,11,9 + lần đầu bài 7,8,10,12",note:"Trẻ bắt đầu nhớ 1-2 từ. Khuyến khích nhưng không bắt buộc.",songs:[1,2,11,9,7,8,10,12],types:["ÔN TẬP","ÔN TẬP","ÔN TẬP","ÔN TẬP","LẦN ĐẦU","LẦN ĐẦU","LẦN ĐẦU","LẦN ĐẦU"],done:false},
+  {id:3,name:"Buổi 3",topic:"Full Cycle lần 1",phase:"🔄",pLabel:"Nhắc lại",obj:"Đi qua đủ 13 bài — trẻ đã quen mặt hết",note:"Checkpoint: giơ thẻ không nói — xem HS phản xạ tự nhiên.",songs:[3,4,5,6,13,7,8,12],types:["ÔN TẬP","ÔN TẬP","ÔN TẬP","ÔN SÂU","ÔN TẬP","ÔN TẬP","ÔN TẬP","ÔN TẬP"],done:false},
+  {id:4,name:"Buổi 4",topic:"Deepening — Nhóm 1",phase:"🔄",pLabel:"Nhắc lại",obj:"Output bắt đầu — game phức tạp hơn, HS nói nhiều hơn",note:"GV dừng hát giữa câu → chờ HS điền. Cuối buổi: mini show.",songs:[1,2,11,9,3,4,7,13],types:["DEEPENING","DEEPENING","DEEPENING","DEEPENING","DEEPENING","DEEPENING","DEEPENING","DEEPENING"],done:false},
+  {id:5,name:"Buổi 5",topic:"Deepening — Nhóm 2",phase:"🗣️",pLabel:"Output",obj:"Ôn sâu nhóm còn lại — checkpoint giữa khoá (~50%)",note:"Vocab challenge: thẻ chỉ có chữ, không có hình.",songs:[5,6,8,10,12,7,4,13],types:["DEEPENING","DEEPENING","DEEPENING","DEEPENING","DEEPENING","DEEPENING+","DEEPENING+","DEEPENING+"],done:false},
+  {id:6,name:"Buổi 6",topic:"Consolidation",phase:"🗣️",pLabel:"Output",obj:"Nhóm chủ đề Animals + Colors — kết nối từ vựng xuyên bài",note:"Sorting game cuối buổi: HS tự phân loại thẻ theo nhóm.",songs:[12,7,2,8,3,4,1,11],types:["CỦNG CỐ","CỦNG CỐ","CỦNG CỐ","CỦNG CỐ","CỦNG CỐ","CỦNG CỐ","CỦNG CỐ","CỦNG CỐ"],done:false},
+  {id:7,name:"Buổi 7",topic:"Output Focus",phase:"🗣️",pLabel:"Output",obj:"HS nói nhiều hơn GV — GV là người hỗ trợ",note:"Show time: từng bé hát 1 câu trước lớp.",songs:[9,10,5,6,13,7,12,8],types:["OUTPUT","OUTPUT","OUTPUT","OUTPUT","OUTPUT","OUTPUT","OUTPUT","OUTPUT"],done:false},
+  {id:8,name:"Buổi 8",topic:"Mastery Check",phase:"🎯",pLabel:"Mastery",obj:"Vocabulary Mastery — thẻ text only, không có hình",note:"Ghi chú: từ nào nhớ ✅, cần ôn 🔄, chưa nhớ ❌.",songs:[2,4,8,12,3,7,5,6],types:["MASTERY","MASTERY","MASTERY","MASTERY","MASTERY","MASTERY","MASTERY","MASTERY"],done:false},
+  {id:9,name:"Buổi 9",topic:"Fix & Connect",phase:"🎯",pLabel:"Mastery",obj:"Ôn điểm yếu + kết nối bài với thực tế hàng ngày",note:"Announce buổi 10: tuần sau biểu diễn! 🎉",songs:[1,9,11,10,8,4,12,13],types:["STRENGTHEN","STRENGTHEN","STRENGTHEN","STRENGTHEN","STRENGTHEN","STRENGTHEN","STRENGTHEN","STRENGTHEN"],done:false},
+  {id:10,name:"Buổi 10",topic:"🎉 Celebration Day!",phase:"🏆",pLabel:"Showcase",obj:"Mini Concert — HS là ngôi sao chính, không áp lực",note:"Chuẩn bị: in chứng chỉ, mời phụ huynh, quay video!",songs:[11,1,13,2,12,7,8,4],types:["BIỂU DIỄN","BIỂU DIỄN","BIỂU DIỄN","BIỂU DIỄN","BIỂU DIỄN","BIỂU DIỄN","BIỂU DIỄN","BIỂU DIỄN"],done:false}
+];
+
+const TYPE_S={"LẦN ĐẦU":{bg:"#e3f2fd",c:"#1565c0"},"ÔN TẬP":{bg:"#e8f5e9",c:"#2e7d32"},"ÔN SÂU":{bg:"#c8e6c9",c:"#1b5e20"},"DEEPENING":{bg:"#f3e5f5",c:"#6a1b9a"},"DEEPENING+":{bg:"#ede7f6",c:"#4527a0"},"CỦNG CỐ":{bg:"#fff3e0",c:"#e65100"},"OUTPUT":{bg:"#fce4ec",c:"#880e4f"},"MASTERY":{bg:"#e0f2f1",c:"#00695c"},"STRENGTHEN":{bg:"#fff8e1",c:"#f57f17"},"BIỂU DIỄN":{bg:"#ffd6e7",c:"#880e4f"}};
+const AV_COLORS=['#f06292','#26c6a0','#42a5f5','#ffa726','#9c6fef','#ef5350','#26a69a','#5c6bc0','#ec407a','#66bb6a'];
+const STU_CRITERIA={
+  nhanThuc:[
+    {id:'nhanDien',  label:'Nhận diện được từ vựng', icon:'👁️'},
+    {id:'docDuoc',   label:'Đọc / nói được từ',      icon:'🗣️'},
+    {id:'hieuHD',    label:'Hiểu hướng dẫn GV',      icon:'👂'},
+  ],
+  kyNang:[
+    {id:'hatDuoc',   label:'Hát được bài',            icon:'🎵'},
+    {id:'tprDuoc',   label:'Làm được TPR',            icon:'🤸'},
+    {id:'gameOK',    label:'Tham gia game tích cực',  icon:'🎮'},
+    {id:'noiCauDuoc',label:'Nói được câu đầy đủ',     icon:'💬'},
+  ],
+  thaiDo:[
+    {id:'yThuc',     label:'Ý thức trong lớp tốt',   icon:'😊'},
+    {id:'hangHai',   label:'Hăng hái tương tác',      icon:'🙋'},
+    {id:'tuTin',     label:'Tự tin phát biểu',        icon:'⭐'},
+  ],
+  canHoTro:[
+    {id:'canNhac',   label:'Cần nhắc lại nhiều',      icon:'🔄'},
+    {id:'chuaTT',    label:'Chưa tập trung',           icon:'😶'},
+    {id:'canLuyenNha',label:'Cần luyện thêm ở nhà',  icon:'🏠'},
+  ],
+};
+const CRITERIA_GROUPS=[
+  {key:'nhanThuc', label:'🧠 Nhận thức', color:'#e3f2fd', textColor:'#1565c0'},
+  {key:'kyNang',   label:'🎵 Kỹ năng',  color:'#e8f5e9', textColor:'#2e7d32'},
+  {key:'thaiDo',   label:'💛 Thái độ',  color:'#fff8e1', textColor:'#f57f17'},
+  {key:'canHoTro', label:'🔄 Cần hỗ trợ', color:'#fff0f5', textColor:'#c2185b'},
+];
+const QUICK_NOTES=[
+  'Bé rất tích cực hôm nay 🌟',
+  'Tiến bộ rõ so với buổi trước 📈',
+  'Cần khuyến khích thêm 💪',
+  'Bé hơi mệt / chưa tập trung hôm nay',
+  'Phát âm tốt, cần mở rộng vốn từ',
+  'Rất tự tin khi phát biểu trước lớp',
+  'Cần luyện thêm ở nhà cùng ba mẹ',
+  'Hát rất hay, nhớ từ tốt 🎵',
+];
+// Legacy - keep for compat
+const STU_ACTS=['Nhận diện từ','Hát theo','Chơi game','Nói câu đầy đủ','Tự tin','TPR','Tương tác'];
+const BADGES=[{icon:"🌟",name:"Siêu sao"},{icon:"🎵",name:"Ca sĩ nhí"},{icon:"🧠",name:"Từ vựng"},{icon:"💪",name:"Dũng cảm"},{icon:"👑",name:"Best today"},{icon:"🎭",name:"Diễn viên"}];
+const MEM_CLS={'✅':'mem-good','🔄':'mem-review','❌':'mem-bad','':''};
+const MEM_NEXT={'':'✅','✅':'🔄','🔄':'❌','❌':''};
+const EMOJI_MAP={rain:'🌧️',daddy:'👨',mommy:'👩',brother:'👦',play:'⚽',one:'1️⃣',two:'2️⃣',three:'3️⃣',four:'4️⃣',five:'5️⃣',six:'6️⃣',seven:'7️⃣',eight:'8️⃣',nine:'9️⃣',ten:'🔟',dinosaur:'🦕',kite:'🪁',robot:'🤖',ball:'⚽',doll:'🪆',blocks:'🧱','teddy bear':'🧸',eyes:'👀',ears:'👂',nose:'👃',arms:'💪',legs:'🦵',love:'❤️','wash face':'🚿','brush teeth':'🪥','comb hair':'💇','get dressed':'👕','go to school':'🎒',morning:'🌅',fly:'🦋',stomp:'🦶',swim:'🏊',climb:'🧗',run:'🏃',jump:'🦘',sing:'🎤',dance:'💃',broccoli:'🥦',tomato:'🍅',pepper:'🫑',mushroom:'🍄',cabbage:'🥬',carrot:'🥕',potato:'🥔',eggplant:'🍆','brown bear':'🐻','red bird':'🐦','yellow duck':'🦆','blue horse':'🐴','green frog':'🐸','white dog':'🐕','black sheep':'🐑',goldfish:'🐟','stand up':'⬆️','sit down':'⬇️',clap:'👏',roll:'🔄',crawl:'🐊','turn around':'🔃'};
+
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
+let apiKey   = localStorage.getItem('gemini_key')||'';
+let curSess  = 0;
+let stepsDone= JSON.parse(localStorage.getItem('sas_steps')||'{}');
+let songLinks= JSON.parse(localStorage.getItem('sas_links')||'{}');
+let sessDone = JSON.parse(localStorage.getItem('sas_done')||'{}');
+let stars    = parseInt(localStorage.getItem('sas_stars')||'0');
+let rewardHist=JSON.parse(localStorage.getItem('sas_rhist')||'[]');
+let students = JSON.parse(localStorage.getItem('sas_students')||'[]');
+let fcImages = JSON.parse(localStorage.getItem('sas_fcimgs')||'{}');
+let timerSec=300,timerRunning=false,timerInterval=null;
+let vsessFilter=0,currentVocabList=[],lbIdx=0,lbFlipped=false;
+let camStream=null,openStuId=null,customAudioObjs={};
+
+// apply saved links & done state
+Object.entries(songLinks).forEach(([id,l])=>{if(SONGS[id]){SONGS[id].yt=l.yt||'';SONGS[id].drive=l.drive||'';}});
+SESSIONS.forEach(s=>{if(sessDone[s.id])s.done=true;});
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function save(key,val){localStorage.setItem(key,typeof val==='string'?val:JSON.stringify(val));}
+
+// ════════════════════════════════════════════
+//  NAV
+// ════════════════════════════════════════════
+function goPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  const map={lesson:'t-lesson',vocab:'t-vocab',reward:'t-reward',progress:'t-progress'};
+  document.querySelectorAll('.nav-tab').forEach(t=>{if(t.classList.contains(map[name]))t.classList.add('active');});
+  if(name==='vocab')   {renderVocab(); setTimeout(()=>{initWheel();renderWheelPicker();},100);}
+  if(name==='reward')  renderReward();
+  if(name==='progress'){renderProgress();renderProgStudents(students[0]?.id||null);}
+}
+
+// ════════════════════════════════════════════
+//  LESSON PLAYER
+// ════════════════════════════════════════════
+function initLesson(){
+  renderSessBar();renderSessContent();renderRpProg();updateTimerDisplay();
+}
+function renderSessBar(){
+  document.getElementById('sess-bar').innerHTML=SESSIONS.map((s,i)=>`
+    <button class="sess-pill ${i===curSess?'active':''} ${s.done?'done':''}" onclick="switchSess(${i})">${s.phase}${s.id}</button>`).join('');
+}
+function switchSess(i){curSess=i;renderSessBar();renderSessContent();renderRpProg();}
+
+// ── Vocab target tịnh tiến theo buổi ──────────────────────────────
+// Mỗi bài giới thiệu TOÀN BỘ từ, nhưng số từ "yêu cầu nhớ" tăng dần
+// phase → targetCount per song (số từ cần nhớ / bài)
+const PHASE_TARGET={
+  'LẦN ĐẦU':  {n:2, label:'Nghe quen',   color:'#e3f2fd', tc:'#1565c0', desc:'Chỉ cần nghe và quen mặt'},
+  'ÔN TẬP':   {n:3, label:'Nhớ cơ bản',  color:'#e8f5e9', tc:'#2e7d32', desc:'Nhận diện được khi nghe'},
+  'ÔN SÂU':   {n:4, label:'Nói được',    color:'#c8e6c9', tc:'#1b5e20', desc:'Nói được khi nhìn thẻ'},
+  'DEEPENING': {n:5, label:'Hiểu sâu',   color:'#f3e5f5', tc:'#6a1b9a', desc:'Dùng trong câu đơn giản'},
+  'DEEPENING+':{n:6, label:'Dùng thạo',  color:'#ede7f6', tc:'#4527a0', desc:'Tự nói không cần nhắc'},
+  'CỦNG CỐ':  {n:6, label:'Củng cố',    color:'#fff3e0', tc:'#e65100', desc:'Kết nối từ xuyên bài'},
+  'OUTPUT':   {n:7, label:'Output',     color:'#fce4ec', tc:'#880e4f', desc:'Nói câu đầy đủ'},
+  'MASTERY':  {n:99,label:'Tất cả',     color:'#e0f2f1', tc:'#00695c', desc:'Nhớ toàn bộ — không cần thẻ'},
+  'STRENGTHEN':{n:99,label:'Tất cả',    color:'#fff8e1', tc:'#f57f17', desc:'Củng cố điểm yếu'},
+  'BIỂU DIỄN':{n:99,label:'Showcase',  color:'#ffd6e7', tc:'#880e4f', desc:'Trình diễn tự nhiên'},
+};
+// Lấy n từ "cần nhớ" cho 1 bài theo type của buổi hiện tại
+function getTargetN(type, totalVocab){
+  const t=PHASE_TARGET[type]||{n:3};
+  return Math.min(t.n, totalVocab);
+}
+// Trả về {target:[], bonus:[]} - từ cần nhớ vs từ giới thiệu thêm
+function splitVocab(song, type){
+  const n=getTargetN(type, song.vocab.length);
+  return {target: song.vocab.slice(0,n), bonus: song.vocab.slice(n)};
+}
+
+function renderSessContent(){
+  const s=SESSIONS[curSess];
+  const allVocab=[...new Set(s.songs.flatMap(sid=>SONGS[sid].vocab.map(v=>v.en)))];
+  // tổng từ cần nhớ buổi này (target)
+  let totalTarget=0;
+  s.songs.forEach((sid,idx)=>{
+    const song=SONGS[sid], type=s.types[idx];
+    const n=getTargetN(type, song.vocab.length);
+    totalTarget+=n;
+  });
+  const phase=PHASE_TARGET[s.types[0]]||{label:'Học',color:'#e3f2fd',tc:'#1565c0',desc:''};
+  // progress bar: buổi 1→10 tịnh tiến
+  const progressPct=Math.round((s.id-1)/9*100);
+  document.getElementById('sess-content').innerHTML=`
+    <div class="sess-hero">
+      <div class="sh-row">
+        <div class="sh-phase">${s.phase}</div>
+        <div>
+          <div class="sh-title">${s.topic}</div>
+          <div class="sh-sub">Buổi ${s.id} · ${s.pLabel} · ${s.songs.length} bài · ${allVocab.length} từ giới thiệu</div>
+          <div class="sh-obj">🎯 ${s.obj}</div>
+        </div>
+      </div>
+      ${s.note?`<div class="sh-note">💡 ${s.note}</div>`:''}
+      <!-- VOCAB PROGRESS BANNER -->
+      <div style="margin-top:10px;background:${phase.color};border-radius:10px;padding:10px 14px;border:1.5px solid ${phase.tc}22">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <span style="font-size:12px;font-weight:800;color:${phase.tc};text-transform:uppercase;letter-spacing:.5px">🏁 Mục tiêu buổi ${s.id}</span>
+            <span style="margin-left:8px;font-size:12px;background:${phase.tc};color:white;border-radius:10px;padding:2px 9px;font-weight:700">${phase.label}</span>
+          </div>
+          <div style="font-size:12px;color:${phase.tc};font-weight:700">
+            <span style="font-size:16px;font-weight:800">${totalTarget}</span> từ cần nhớ
+            <span style="color:#aaa;margin:0 4px">/</span>
+            <span>${allVocab.length} từ giới thiệu</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:${phase.tc};margin:5px 0 8px;opacity:.85">${phase.desc}</div>
+        <!-- lộ trình tổng 10 buổi -->
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;color:#888;white-space:nowrap">Lộ trình khoá:</span>
+          <div style="flex:1;height:7px;background:#ddd;border-radius:4px;overflow:hidden">
+            <div style="width:${progressPct}%;height:100%;background:linear-gradient(90deg,${phase.tc},#26c6a0);border-radius:4px;transition:width .5s"></div>
+          </div>
+          <span style="font-size:11px;color:${phase.tc};font-weight:800">${progressPct}%</span>
+        </div>
+      </div>
+    </div>
+    ${s.songs.map((sid,idx)=>buildSongCard(s,sid,idx)).join('')}`;
+  updateSessDoneBtn();
+}
+
+function buildSongCard(sess,sid,idx){
+  const song=SONGS[sid],type=sess.types[idx],ts=TYPE_S[type]||{bg:'#f5f5f5',c:'#555'};
+  const sk=`${sess.id}_${sid}`;
+  const dc=song.steps.filter((_,si)=>stepsDone[`${sk}_${si}`]).length;
+  const yt=song.yt||'',drv=song.drive||'';
+  return `
+  <div class="song-card open" id="sc-${sess.id}-${sid}">
+    <div class="sc-head" onclick="document.getElementById('sc-${sess.id}-${sid}').classList.toggle('open')">
+      <div class="sc-num" style="background:${ts.bg};color:${ts.c}">${sid}</div>
+      <div class="sc-info">
+        <div class="sc-name">${song.name}</div>
+        <div class="sc-meta">${(()=>{const n=getTargetN(type,song.vocab.length);const t=PHASE_TARGET[type]||{label:'Học',tc:'#555'};return `<span style="color:${t.tc};font-weight:800">${n} từ cần nhớ</span> · ${song.vocab.slice(0,n).map(v=>v.en).join(', ')}${song.vocab.length>n?' …':''}`})()}</div>
+      </div>
+      <span class="type-b" style="background:${ts.bg};color:${ts.c}">${type}</span>
+      <span class="sc-pct" id="scp-${sess.id}-${sid}">${dc}/${song.steps.length}</span>
+      <span class="sc-arr">▾</span>
+    </div>
+    <div class="sc-body">
+      <div class="vid-area">
+        <div class="vid-label">🎵 Video bài hát</div>
+        ${yt?`<div class="yt-wrap"><iframe width="100%" height="100%" src="https://www.youtube-nocookie.com/embed/${getYTId(yt)}?rel=0&modestbranding=1" frameborder="0" allowfullscreen style="display:block;min-height:180px"></iframe></div>`
+           :`<div class="yt-wrap"><div class="yt-ph"><div class="yt-ph-icon">▶️</div><div class="yt-ph-txt">Chưa có link YouTube<br>Dán link bên dưới</div></div></div>`}
+        <div class="link-row">
+          <input class="link-inp" id="yt-${sid}" value="${esc(yt)}" placeholder="YouTube link cho: ${song.name}">
+          <button class="link-btn" onclick="saveYT(${sid})">▶ Lưu</button>
+        </div>
+        ${drv?`<audio controls src="${esc(drv)}" style="width:100%;margin-top:6px;border-radius:7px"></audio>`:''}
+        <div class="link-row" style="margin-top:5px">
+          <input class="link-inp" id="drv-${sid}" value="${esc(drv)}" placeholder="Drive link (dự phòng)" style="border-color:var(--teal)">
+          <button class="link-btn teal" onclick="saveDrv(${sid})">💾</button>
+        </div>
+      </div>
+      <div class="steps-area">
+        <div class="steps-lbl">📋 Các bước — tick khi xong</div>
+        ${song.steps.map((st,si)=>{
+          const k=`${sk}_${si}`,d=!!stepsDone[k];
+          return `<div class="step-row ${d?'done-row':''}" id="sr-${k}">
+            <div class="step-chk ${d?'done':''}" onclick="tickStep('${k}','${sess.id}','${sid}')"></div>
+            <div class="step-content">
+              <span class="sp-phase" style="background:${st.c};color:${st.ct}">${st.ph}</span>
+              ${st.t?`<div class="sp-time">⏱ ${st.t}</div>`:''}
+              <div class="sp-text">${st.txt}</div>
+              ${st.tip?`<div class="sp-tip">💡 ${st.tip}</div>`:''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="vocab-chips">${(()=>{
+        const {target,bonus}=splitVocab(song,type);
+        const phase=PHASE_TARGET[type]||{color:'#e3f2fd',tc:'#1565c0',label:'Học'};
+        const targetChips=target.map(v=>`<div class="vc" style="background:${phase.color};color:${phase.tc};border:1.5px solid ${phase.tc}44;font-weight:800" title="✅ Cần nhớ buổi này">${v.en}</div>`).join('');
+        const bonusChips=bonus.length?bonus.map(v=>`<div class="vc" style="background:#f5f5f5;color:#aaa;border:1.5px dashed #ddd;font-size:11px" title="👁️ Nghe quen, chưa yêu cầu">${v.en}</div>`).join(''):'';
+        const targetLabel=`<div style="width:100%;font-size:11px;font-weight:700;color:${phase.tc};margin-bottom:3px">✅ Cần nhớ (${target.length} từ):</div>`;
+        const bonusLabel=bonus.length?`<div style="width:100%;font-size:11px;color:#aaa;margin:5px 0 3px">👁️ Giới thiệu thêm (${bonus.length} từ) — chưa yêu cầu:</div>`:'';
+        return targetLabel+targetChips+bonusLabel+bonusChips;
+      })()}</div>
+    </div>
+  </div>`;
+}
+
+function tickStep(k,sessId,sid){
+  stepsDone[k]=!stepsDone[k];save('sas_steps',stepsDone);
+  const row=document.getElementById('sr-'+k);
+  if(row){const chk=row.querySelector('.step-chk');chk.classList.toggle('done',stepsDone[k]);row.classList.toggle('done-row',stepsDone[k]);}
+  const song=SONGS[parseInt(sid)],sk=`${sessId}_${sid}`;
+  const dc=song.steps.filter((_,si)=>stepsDone[`${sk}_${si}`]).length;
+  const el=document.getElementById(`scp-${sessId}-${sid}`);
+  if(el)el.textContent=`${dc}/${song.steps.length}`;
+  renderRpProg();
+}
+function saveYT(sid){const v=document.getElementById(`yt-${sid}`)?.value?.trim()||'';SONGS[sid].yt=v;if(!songLinks[sid])songLinks[sid]={};songLinks[sid].yt=v;save('sas_links',songLinks);renderSessContent();toast('✅ Đã lưu YouTube!');}
+function saveDrv(sid){const v=document.getElementById(`drv-${sid}`)?.value?.trim()||'';SONGS[sid].drive=v;if(!songLinks[sid])songLinks[sid]={};songLinks[sid].drive=v;save('sas_links',songLinks);renderSessContent();toast('✅ Đã lưu Drive!');}
+function getYTId(url){const m=url.match(/(?:v=|youtu\.be\/)([^&?]+)/);return m?m[1]:'';}
+function markSessDone(){const s=SESSIONS[curSess];s.done=!s.done;sessDone[s.id]=s.done;save('sas_done',sessDone);renderSessBar();renderSessContent();renderRpProg();toast(s.done?'✅ Đã đánh dấu xong!':'↩ Đã bỏ đánh dấu');}
+function updateSessDoneBtn(){const b=document.getElementById('sess-done-btn'),s=SESSIONS[curSess];if(!b)return;b.textContent=s.done?'✅ Buổi đã xong':'Đánh dấu buổi xong ✓';b.style.color=s.done?'var(--green)':'var(--muted)';b.style.borderColor=s.done?'var(--green)':'var(--border)';}
+function renderRpProg(){
+  const s=SESSIONS[curSess],el=document.getElementById('rp-prog');if(!el)return;
+  el.innerHTML=s.songs.map(sid=>{const song=SONGS[sid],sk=`${s.id}_${sid}`;const dc=song.steps.filter((_,si)=>stepsDone[`${sk}_${si}`]).length;const pct=Math.round(dc/song.steps.length*100);
+    return `<div class="pr-row"><div class="pr-num">${sid}</div><div class="pr-name">${song.name.split(' ').slice(0,3).join(' ')}</div><div class="pr-bar"><div class="pr-fill" style="width:${pct}%"></div></div><div class="pr-pct">${pct}%</div></div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+//  TIMER
+// ════════════════════════════════════════════
+function setTimer(s){if(timerRunning)return;timerSec=s;updateTimerDisplay();}
+function updateTimerDisplay(){const el=document.getElementById('t-disp');if(!el)return;const m=Math.floor(timerSec/60),s=timerSec%60;el.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;el.className='t-display'+(timerSec<=10&&timerRunning?' warn':'');}
+function toggleTimer(){const btn=document.getElementById('t-btn');if(timerRunning){clearInterval(timerInterval);timerRunning=false;if(btn){btn.textContent='▶ Start';btn.className='t-btn t-go';}document.getElementById('t-lbl').textContent='';}else{if(timerSec<=0){resetTimer();return;}timerRunning=true;if(btn){btn.textContent='⏸ Pause';btn.className='t-btn t-stop';}document.getElementById('t-lbl').textContent='⏱ Đang chạy...';timerInterval=setInterval(()=>{timerSec--;updateTimerDisplay();if(timerSec===10)playSnd('bell',null);if(timerSec<=0){clearInterval(timerInterval);timerRunning=false;const b=document.getElementById('t-btn');if(b){b.textContent='▶ Start';b.className='t-btn t-go';}document.getElementById('t-lbl').textContent='✅ Hết giờ!';playSnd('ding',null);}},1000);}}
+function resetTimer(){clearInterval(timerInterval);timerRunning=false;timerSec=300;const b=document.getElementById('t-btn');if(b){b.textContent='▶ Start';b.className='t-btn t-go';}document.getElementById('t-lbl').textContent='';updateTimerDisplay();}
+
+// ════════════════════════════════════════════
+//  SOUNDS
+// ════════════════════════════════════════════
+function getAC(){if(!window._ac||window._ac.state==='closed')window._ac=new(window.AudioContext||window.webkitAudioContext)();if(window._ac.state==='suspended')window._ac.resume();return window._ac;}
+function playN(f,d,dur,type,v){const c=getAC(),o=c.createOscillator(),g=c.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(0,c.currentTime+d);g.gain.linearRampToValueAtTime(v||.3,c.currentTime+d+.01);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d+dur);o.connect(g);g.connect(c.destination);o.start(c.currentTime+d);o.stop(c.currentTime+d+dur+.05);}
+function playNoise(d,dur,v){const c=getAC(),buf=c.createBuffer(1,c.sampleRate*dur,c.sampleRate),data=buf.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(v||.35);const src=c.createBufferSource(),g=c.createGain();src.buffer=buf;g.gain.setValueAtTime(v||.35,c.currentTime+d);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d+dur);src.connect(g);g.connect(c.destination);src.start(c.currentTime+d);}
+const SYNTH={bell:()=>{playN(880,0,.05);playN(660,.05,.05);playN(440,.1,.45);},ding:()=>{[0,.25,.5].forEach(t=>playN(880,t,.2));},clap:()=>{[0,.18,.36,.54,.72].forEach(t=>playNoise(t,.08,.4));},wow:()=>{[523,659,784,1047].forEach((f,i)=>playN(f,i*.15,.2));},cleanup:()=>{[523,587,659,698,784,698,659,523].reduce((t,f)=>{playN(f,t,.14,'triangle');return t+.14;},0);},lineup:()=>{[392,440,494,523,587,659,784].reduce((t,f)=>{playN(f,t,.12);return t+.12;},0);}};
+function playSnd(name,btn){if(btn){btn.classList.add('sb-pulse');setTimeout(()=>btn.classList.remove('sb-pulse'),350);}if(SYNTH[name])SYNTH[name]();}
+
+// ── CUSTOM FLASHCARDS ──
+let customCards=JSON.parse(localStorage.getItem('sas_custom_cards')||'[]');
+
+function openAddCardModal(){
+  document.getElementById('new-card-en').value='';
+  document.getElementById('new-card-vn').value='';
+  document.getElementById('new-card-emoji').value='';
+  openModal('add-card-modal');
+  setTimeout(()=>document.getElementById('new-card-en')?.focus(),100);
+}
+
+function confirmAddCard(){
+  const en=document.getElementById('new-card-en')?.value?.trim();
+  const vn=document.getElementById('new-card-vn')?.value?.trim();
+  const emoji=document.getElementById('new-card-emoji')?.value?.trim().slice(0,2)||'';
+  const pos=document.getElementById('new-card-pos')?.value||'end';
+  const afterNum=parseInt(document.getElementById('new-card-after')?.value||'0');
+  if(!en||!vn){toast('Nhập đủ tiếng Anh và tiếng Việt!');return;}
+  const card={en,vn,emoji,custom:true};
+  if(pos==='start'){customCards.unshift(card);}
+  else if(pos==='after'&&afterNum>0){customCards.splice(afterNum,0,card);}
+  else{customCards.push(card);}
+  localStorage.setItem('sas_custom_cards',JSON.stringify(customCards));
+  closeModal('add-card-modal');
+  renderVocab();
+  const posLabel=pos==='start'?' (đầu)':pos==='after'?' (sau thẻ '+afterNum+')':' (cuối)';
+  toast('✅ Đã thêm thẻ: '+en+posLabel);
+}
+
+
+function deleteCustomCard(en){
+  customCards=customCards.filter(c=>c.en!==en);
+  localStorage.setItem('sas_custom_cards',JSON.stringify(customCards));
+  renderVocab();toast('🗑 Đã xoá thẻ: '+en);
+}
+
+
+// ════════════════════════════════════════════
+//  🎡 SPIN THE WHEEL
+// ════════════════════════════════════════════
+let wheelItems=[],wheelUsed=[],wheelAngle=0,wheelSpinning=false,wheelSpinCount=0;
+let wheelSelected=new Set(); // en strings currently checked for the wheel
+const WHEEL_COLORS=['#ff6b9d','#ffd166','#06d6a0','#118ab2','#ff9f43','#a29bfe','#ff6b6b','#1dd3b0','#f78c6c','#82aaff','#c3e88d','#ffcb6b'];
+
+function getWheelAllVocab(){
+  const si=parseInt(document.getElementById('wheel-sess')?.value||0);
+  const sess=SESSIONS[si];if(!sess)return[];
+  const items=[];const seen=new Set();
+  sess.songs.forEach(sid=>{
+    const song=SONGS[sid];
+    if(song&&song.vocab)song.vocab.forEach(v=>{if(!seen.has(v.en)){seen.add(v.en);items.push(v);}});
+  });
+  return items;
+}
+function getWheelTargetVocab(){
+  const si=parseInt(document.getElementById('wheel-sess')?.value||0);
+  const sess=SESSIONS[si];if(!sess)return new Set();
+  const targets=new Set();
+  sess.songs.forEach((sid,idx)=>{
+    const song=SONGS[sid],type=sess.types[idx];
+    const {target}=splitVocab(song,type);
+    target.forEach(v=>targets.add(v.en));
+  });
+  return targets;
+}
+
+function renderWheelPicker(){
+  const all=getWheelAllVocab();
+  const targets=getWheelTargetVocab();
+  const picker=document.getElementById('wheel-word-picker');
+  if(!picker)return;
+  picker.innerHTML=all.map(v=>{
+    const isSel=wheelSelected.has(v.en);
+    const isTgt=targets.has(v.en);
+    const bg=isSel?(isTgt?'var(--teal)':'var(--orange)'):'var(--card)';
+    const col=isSel?'white':(isTgt?'var(--teal-d)':'var(--muted)');
+    const border=isSel?(isTgt?'var(--teal)':'var(--orange)'):(isTgt?'var(--teal)':'#ddd');
+    const dot=isTgt?'✅ ':'';
+    return `<span onclick="toggleWheelWord('${v.en.replace(/'/g,"\'")}')" style="padding:5px 12px;border-radius:14px;border:1.5px solid ${border};background:${bg};color:${col};cursor:pointer;font-size:12px;font-weight:700;transition:all .15s;user-select:none">${dot}${v.en}</span>`;
+  }).join('');
+  updateWheelSelCount();
+}
+function toggleWheelWord(en){
+  if(wheelSelected.has(en))wheelSelected.delete(en);else wheelSelected.add(en);
+  renderWheelPicker();
+  rebuildWheelFromSelection();
+}
+function wheelSelectAll(){
+  getWheelAllVocab().forEach(v=>wheelSelected.add(v.en));
+  renderWheelPicker();rebuildWheelFromSelection();
+}
+function wheelSelectNone(){
+  wheelSelected.clear();renderWheelPicker();rebuildWheelFromSelection();
+}
+function wheelSelectTarget(){
+  wheelSelected.clear();
+  getWheelTargetVocab().forEach(en=>wheelSelected.add(en));
+  renderWheelPicker();rebuildWheelFromSelection();
+}
+function rebuildWheelFromSelection(){
+  const all=getWheelAllVocab();
+  wheelItems=all.filter(v=>wheelSelected.has(v.en));
+  wheelUsed=wheelUsed.filter(en=>wheelSelected.has(en));
+  drawWheel(wheelAngle);
+  updateWheelSpinCount();
+  const res=document.getElementById('wheel-result');
+  if(res&&!wheelItems.length)res.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,.5)">Chọn ít nhất 1 từ ở trên ↑</div>';
+}
+function updateWheelSelCount(){
+  const el=document.getElementById('wheel-sel-count');
+  if(el)el.textContent=wheelSelected.size+' từ được chọn';
+}
+function resetWheelUsed(){wheelUsed=[];drawWheel(wheelAngle);updateWheelSpinCount();toast('🔄 Đã reset, quay lại từ đầu!');}
+
+function initWheel(){
+  wheelUsed=[];wheelAngle=0;wheelSpinCount=0;
+  // default: select target words
+  wheelSelectTarget();
+}
+
+function drawWheel(angle){
+  const canvas=document.getElementById('wheel-canvas');if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const cx=140,cy=140,r=132;
+  ctx.clearRect(0,0,280,280);
+  const items=wheelItems.length?wheelItems:[{en:'?',vn:'?'}];
+  const n=items.length;
+  if(n===0){
+    ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.fillStyle='#2a3a5a';ctx.fill();
+    ctx.font='bold 14px Nunito,sans-serif';ctx.fillStyle='rgba(255,255,255,.4)';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('Chọn từ ở trên',cx,cy);return;
+  }
+  const arc=2*Math.PI/n;
+  items.forEach((item,i)=>{
+    const used=wheelUsed.includes(item.en);
+    const startA=angle+i*arc-Math.PI/2,endA=startA+arc;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,startA,endA);ctx.closePath();
+    ctx.fillStyle=used?'#444':WHEEL_COLORS[i%WHEEL_COLORS.length];
+    ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke();
+    const midA=startA+arc/2;
+    const imgR=r*0.62;
+    const tx=cx+Math.cos(midA)*imgR,ty=cy+Math.sin(midA)*imgR;
+    ctx.save();ctx.translate(tx,ty);ctx.rotate(midA+Math.PI/2);
+    const img=fcImages[item.en.toLowerCase()];
+    const sz=n<=6?22:n<=10?16:12;
+    if(img&&!used){
+      try{const im=new Image();im.src=img;ctx.drawImage(im,-sz*1.1,-sz*1.1,sz*2.2,sz*2.2);}catch(e){}
+    }
+    ctx.font=`${sz}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=used?'#888':'white';ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=3;
+    ctx.fillText(getEmoji(item.en),0,0);ctx.shadowBlur=0;
+    const wsz=n<=4?11:n<=8?9:7;
+    ctx.font=`bold ${wsz}px Nunito,sans-serif`;ctx.fillStyle=used?'#777':'rgba(255,255,255,.9)';
+    ctx.fillText(item.en.slice(0,9),0,sz/2+wsz+2);
+    ctx.restore();
+  });
+  ctx.beginPath();ctx.arc(cx,cy,22,0,2*Math.PI);ctx.fillStyle='white';ctx.fill();
+  ctx.strokeStyle='#ddd';ctx.lineWidth=2;ctx.stroke();
+  ctx.font='bold 13px Nunito,sans-serif';ctx.fillStyle='#333';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('GO!',cx,cy);
+}
+
+function spinWheel(){
+  if(wheelSpinning)return;
+  if(!wheelItems.length){toast('Chọn ít nhất 1 từ!');return;}
+  const available=wheelItems.filter(i=>!wheelUsed.includes(i.en));
+  if(!available.length){wheelUsed=[];toast('🎡 Đã quay hết! Tự reset!');drawWheel(wheelAngle);return;}
+  wheelSpinning=true;
+  const btn=document.getElementById('wheel-spin-btn');if(btn)btn.disabled=true;
+  const pick=available[Math.floor(Math.random()*available.length)];
+  const pickIdx=wheelItems.indexOf(pick);
+  const n=wheelItems.length,arc=2*Math.PI/n;
+  const slotCenter=-(pickIdx*arc+arc/2)+Math.PI/2;
+  const jitter=(Math.random()-.5)*arc*0.6;
+  const target=slotCenter+jitter;
+  const spins=5+Math.floor(Math.random()*4);
+  const finalAngle=wheelAngle+spins*2*Math.PI+(target-((wheelAngle%(2*Math.PI)+2*Math.PI)%(2*Math.PI)));
+  const duration=3000+Math.random()*1000,start=performance.now(),startAngle=wheelAngle;
+  function easeOut(t){return 1-Math.pow(1-t,4);}
+  function animate(now){
+    const t=Math.min((now-start)/duration,1),e=easeOut(t);
+    const cur=startAngle+(finalAngle-startAngle)*e;
+    wheelAngle=cur;drawWheel(cur);
+    if(t<1){requestAnimationFrame(animate);}
+    else{
+      wheelAngle=finalAngle;drawWheel(finalAngle);wheelSpinning=false;
+      wheelUsed.push(pick.en);wheelSpinCount++;
+      updateWheelSpinCount();showWheelResult(pick);
+      if(btn)btn.disabled=false;playWheelDing();
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+function showWheelResult(item){
+  const res=document.getElementById('wheel-result');if(!res)return;
+  const img=fcImages[item.en.toLowerCase()];const emoji=getEmoji(item.en);
+  const imgHtml=img?`<img src="${img}" style="width:80px;height:80px;object-fit:cover;border-radius:14px;border:3px solid rgba(255,255,255,.3)">`:`<div style="font-size:58px;line-height:1">${emoji}</div>`;
+  res.innerHTML=`<div style="animation:wheelPop .4s cubic-bezier(.175,.885,.32,1.275);display:flex;flex-direction:column;align-items:center;gap:6px">
+    ${imgHtml}
+    <div style="font-family:'Baloo 2',cursive;font-size:28px;font-weight:800;color:white;text-shadow:0 2px 12px rgba(0,0,0,.5)">${item.en}</div>
+    <div style="font-size:16px;color:#ffd166;font-weight:700">${item.vn||''}</div>
+  </div>`;
+  if(!document.getElementById('wheel-anim-style')){const s=document.createElement('style');s.id='wheel-anim-style';s.textContent='@keyframes wheelPop{0%{transform:scale(0.3);opacity:0}100%{transform:scale(1);opacity:1}}';document.head.appendChild(s);}
+}
+
+function updateWheelSpinCount(){
+  const el=document.getElementById('wheel-spin-count');if(!el)return;
+  const done=wheelUsed.length,tot=wheelItems.length;
+  el.textContent=tot?`${done}/${tot} từ đã quay`:'';
+}
+function playWheelDing(){
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    [[523,.0],[659,.12],[784,.24],[1047,.36]].forEach(([f,t])=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.type='triangle';o.frequency.value=f;
+      g.gain.setValueAtTime(0,ac.currentTime+t);
+      g.gain.linearRampToValueAtTime(.28,ac.currentTime+t+.02);
+      g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t+.25);
+      o.connect(g);g.connect(ac.destination);
+      o.start(ac.currentTime+t);o.stop(ac.currentTime+t+.3);
+    });
+    setTimeout(()=>ac.close(),1500);
+  }catch(e){}
+}
+
+
+// ════════════════════════════════════════════
+//  REWARD & STUDENTS
+// ════════════════════════════════════════════
+function avColor(name){return AV_COLORS[Math.abs([...name].reduce((a,c)=>a+c.charCodeAt(0),0))%AV_COLORS.length];}
+function saveStudents(){save('sas_students',students);}
+function getStu(id){return students.find(s=>s.id===id);}
+function getStuSess(id,sessId){const stu=getStu(id);if(!stu)return null;if(!stu.sessions[sessId])stu.sessions[sessId]={stars:0,ticks:[],note:'',criteria:{},vocabMem:{}};if(!stu.sessions[sessId].criteria)stu.sessions[sessId].criteria={};return stu.sessions[sessId];}
+
+function renderReward(){
+  document.getElementById('star-count').textContent=stars;
+  document.getElementById('badge-grid').innerHTML=BADGES.map((b,i)=>`
+    <div class="badge-item" onclick="pickBadge(${i})">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+    </div>`).join('');
+  renderStuGrid();renderRewardHist();
+}
+function renderStuGrid(){
+  const grid=document.getElementById('stu-grid');if(!grid)return;
+  grid.innerHTML=students.map(stu=>`
+    <div class="stu-card" onclick="openStuModal('${stu.id}')">
+      <button class="stu-del" onclick="event.stopPropagation();delStu('${stu.id}')">✕</button>
+      <div class="stu-avatar" style="background:${avColor(stu.name)}" onclick="event.stopPropagation();uploadStuPhoto('${stu.id}')">
+        ${stu.photo?`<img src="${stu.photo}" alt="${esc(stu.name)}">`:(stu.name.slice(0,2).toUpperCase())}
+        <div class="stu-cam-over">📷</div>
+      </div>
+      <div class="stu-name">${esc(stu.name)}</div>
+      <div class="stu-stars-disp">${'⭐'.repeat(Math.min(stu.totalStars,5))}${stu.totalStars>5?` +${stu.totalStars-5}`:''}</div>
+    </div>`).join('')+`
+    <div class="stu-add-placeholder" onclick="openModal('add-stu-modal')">
+      <div style="font-size:28px">+</div><div style="font-size:13px;font-weight:600">Thêm bé</div>
+    </div>`;
+}
+
+function addStar(n){stars=Math.max(0,stars+n);save('sas_stars',String(stars));document.getElementById('star-count').textContent=stars;if(n>0)addHist(`+${n} ⭐ (tổng: ${stars})`);}
+function quickReward(label,n){addStar(n);addHist(label);showProjector(null,label);}
+function addHist(msg){const now=new Date().toLocaleTimeString('vi');rewardHist.unshift({msg,time:now});if(rewardHist.length>30)rewardHist.pop();save('sas_rhist',rewardHist);renderRewardHist();}
+function renderRewardHist(){const el=document.getElementById('reward-hist');if(!el)return;el.innerHTML=rewardHist.length?rewardHist.map(r=>`<div style="padding:5px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>${r.msg}</span><span style="color:var(--muted)">${r.time}</span></div>`).join(''):'<span style="color:var(--muted)">Chưa có khen thưởng</span>';}
+
+function confirmAddStudents(){
+  const val=document.getElementById('add-stu-inp').value;
+  const names=val.split('\n').map(n=>n.trim()).filter(Boolean);
+  if(!names.length){toast('Chưa nhập tên!');return;}
+  names.forEach(name=>{if(!students.find(s=>s.name===name))students.push({id:'s'+Date.now()+'_'+Math.random().toString(36).slice(2),name,photo:'',totalStars:0,sessions:{}});});
+  saveStudents();closeModal('add-stu-modal');renderReward();toast('✅ Đã thêm '+names.length+' bé!');
+}
+function delStu(id){students=students.filter(s=>s.id!==id);saveStudents();renderReward();toast('🗑 Đã xoá');}
+// ── Shared photo upload handler ──
+function _doUploadPhoto(id, onDone){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    // Resize to max 300x300 before saving (keep it small)
+    const img=new Image();
+    const objUrl=URL.createObjectURL(f);
+    img.onload=()=>{
+      const MAX=300;
+      let w=img.width,h=img.height;
+      if(w>h&&w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      else if(h>w&&h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+      else if(w>MAX){w=MAX;h=MAX;}
+      const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const dataUrl=canvas.toDataURL('image/jpeg',0.72);
+      URL.revokeObjectURL(objUrl);
+      const stu=getStu(id);if(!stu)return;
+      stu.photo=dataUrl;
+      saveStudents();
+      // Push to Firebase Storage if connected
+      if(fbDb&&fbClassId){
+        fbUploadPhoto(id, dataUrl).catch(e=>console.warn('Photo upload fail:',e));
+      }
+      onDone(id);
+    };
+    img.src=objUrl;
+  };
+  inp.click();
+}
+
+async function fbUploadPhoto(stuId, dataUrl){
+  const{getStorage,ref,uploadString,getDownloadURL}=window._fbMods||{};
+  if(!getStorage||!fbDb)return;
+  const storage=getStorage();
+  const path=`sas_${fbClassId}/photos/${stuId}.jpg`;
+  const storageRef=ref(storage,path);
+  // uploadString accepts base64 data URL
+  await uploadString(storageRef, dataUrl, 'data_url');
+  const url=await getDownloadURL(storageRef);
+  // Save the public URL back so other GVs can load it
+  const stu=getStu(stuId);
+  if(stu){stu.photoUrl=url;saveStudents();}
+  toast('📸 Ảnh đã lưu lên cloud!');
+}
+
+function uploadStuPhoto(id){_doUploadPhoto(id,id2=>{renderReward();});}
+function uploadStuPhotoModal(){if(openStuId)uploadStuPhotoAndRefresh(openStuId);}
+function uploadStuPhotoAndRefresh(id){_doUploadPhoto(id,id2=>{openStuModal(id2);});}
+
+function pickBadge(badgeIdx){
+  if(!students.length){toast('Chưa có học sinh!');return;}
+  window._pendingBadge=badgeIdx;
+  const b=BADGES[badgeIdx];
+  document.getElementById('badge-pick-title').textContent=b.icon+' Tặng "'+b.name+'" cho bé nào?';
+  document.getElementById('badge-pick-list').innerHTML=students.map(s=>`
+    <button onclick="awardBadgeToStu('${s.id}')" style="width:100%;padding:10px 14px;text-align:left;border-radius:9px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-family:Nunito,sans-serif;font-size:14px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:10px">
+      <div style="width:32px;height:32px;border-radius:50%;background:${avColor(s.name)};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white;overflow:hidden;flex-shrink:0">${s.photo?`<img src="${s.photo}" style="width:100%;height:100%;object-fit:cover">`:s.name.slice(0,2).toUpperCase()}</div>
+      <span>${esc(s.name)}</span><span style="margin-left:auto;color:var(--yellow)">${'⭐'.repeat(Math.min(s.totalStars,5))}</span>
+    </button>`).join('');
+  openModal('badge-pick-modal');
+}
+function awardBadgeToStu(id){
+  const stu=getStu(id);if(!stu)return;
+  const b=BADGES[window._pendingBadge];
+  stu.totalStars=(stu.totalStars||0)+2;saveStudents();renderReward();
+  addHist(b.icon+' '+b.name+' → '+stu.name);
+  closeModal('badge-pick-modal');
+  showProjector(stu,b.icon+' '+stu.name+'!');
+  toast('🏅 Tặng badge cho '+stu.name+'!');
+}
+
+// PROJECTOR
+function playFanfare(){
+  try{
+    const c=getAC();
+    [[523,.0,.12,'triangle'],[659,.13,.12,'triangle'],[784,.26,.12,'triangle'],[1047,.39,.14,'triangle'],
+     [784,.53,.08,'sine'],[1047,.62,.45,'sine']].forEach(([f,d,dur,type])=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.type=type;o.frequency.value=f;
+      g.gain.setValueAtTime(0,c.currentTime+d);
+      g.gain.linearRampToValueAtTime(.35,c.currentTime+d+.02);
+      g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d+dur);
+      o.connect(g);g.connect(c.destination);o.start(c.currentTime+d);o.stop(c.currentTime+d+dur+.05);
+    });
+  }catch(e){}
+}
+
+function showProjector(stu,text){
+  const ov=document.getElementById('proj-overlay');
+  const stuImg=document.getElementById('proj-stu-img');
+  const stuName=document.getElementById('proj-stu-name');
+  const starsEl=document.getElementById('proj-stars');
+  const textEl=document.getElementById('proj-text');
+  if(stu&&stu.photo){stuImg.src=stu.photo;stuImg.style.display='block';stuName.textContent=stu.name;stuName.style.display='block';starsEl.style.display='none';}
+  else{stuImg.style.display='none';stuName.style.display='none';starsEl.style.display='block';starsEl.textContent='⭐'.repeat(Math.min(stars,10))||'⭐';}
+  textEl.textContent=text||stars+' Stars! 🎉';
+  ov.classList.add('show');spawnConfetti();playFanfare();
+  if(stu||badgeIcon)setTimeout(()=>ov.classList.remove('show'),4000);
+}
+function hideProjector(){document.getElementById('proj-overlay').classList.remove('show');}
+function spawnConfetti(){
+  const ov=document.getElementById('proj-overlay');
+  const cols=['#f06292','#ffd54f','#26c6a0','#42a5f5','#ab7ef5','#ff8a65','#fff'];
+  for(let i=0;i<40;i++){const p=document.createElement('div');p.className='confetti-piece';p.style.cssText=`left:${Math.random()*100}%;top:-12px;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;background:${cols[Math.floor(Math.random()*cols.length)]};border-radius:${Math.random()>.5?'50%':'2px'};animation:conffall ${1.5+Math.random()*2}s ${Math.random()*.6}s linear forwards`;ov.appendChild(p);setTimeout(()=>p.remove(),4500);}
+  // Sound
+  playSnd('wow',null);
+}
+
+// ════════════════════════════════════════════
+//  STUDENT MODAL
+// ════════════════════════════════════════════
+function openStuModal(stuId){
+  openStuId=stuId;
+  const stu=getStu(stuId);if(!stu)return;
+  const av=document.getElementById('sm-av');
+  av.style.background=avColor(stu.name);
+  av.innerHTML=(stu.photo?`<img src="${stu.photo}" alt="${esc(stu.name)}" style="width:100%;height:100%;object-fit:cover"><div class="sm-av-over">📷</div>`:(stu.name.slice(0,2).toUpperCase()+'<div class="sm-av-over">📷</div>'));
+  document.getElementById('sm-name').textContent=stu.name;
+  document.getElementById('sm-total').textContent='⭐ '+stu.totalStars;
+  renderStuModalBody(stu);
+  openModal('stu-modal');
+}
+function closeStuModal(){closeModal('stu-modal');openStuId=null;renderReward();}
+
+function renderStuModalBody(stu){
+  const sessSelect = `<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;padding:14px 20px;background:var(--bg);border-bottom:1px solid var(--border)">
+    <span style="font-size:13px;font-weight:700;align-self:center">Buổi:</span>
+    ${SESSIONS.map((s,i)=>`<button onclick="switchStuSess('${stu.id}',${s.id},this)" class="act-tick ${i===0?'ticked':''}" data-sess="${s.id}" style="font-size:12px">${s.phase}${s.id}</button>`).join('')}
+  </div>`;
+
+  // Build per-session content (all sessions, shown/hidden by JS)
+  const sessionsHtml = SESSIONS.map((s,si)=>{
+    const sr = getStuSess(stu.id, s.id);
+    const crit = sr.criteria || {};
+    const stars = sr.stars || 0;
+    const note = sr.note || '';
+    const vocabMem = stu.vocabMem || {};
+
+    // Vocab for this session's songs
+    const sessVocab = [];
+    const seen = new Set();
+    s.songs.forEach(sid => {
+      SONGS[sid].vocab.forEach(v => {
+        if(!seen.has(v.en)){ seen.add(v.en); sessVocab.push({...v, songId:sid, songName:SONGS[sid].name}); }
+      });
+    });
+
+    return `<div class="stu-sess-panel" id="ssp-${stu.id}-${s.id}" style="display:${si===0?'block':'none'}">
+      <!-- STAR RATING -->
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+        <span style="font-size:13px;font-weight:700;color:var(--muted)">⭐ Đánh giá chung:</span>
+        <div class="star-picker" id="sp-${stu.id}-${s.id}">
+          ${[1,2,3,4,5].map(n=>`<span class="sp-star ${n<=stars?'lit':''}" onclick="setStuStar('${stu.id}',${s.id},${n})">⭐</span>`).join('')}
+          <span style="font-size:13px;color:var(--muted);margin-left:4px" id="sp-val-${stu.id}-${s.id}">${stars?stars+'/5':''}</span>
+        </div>
+      </div>
+
+      <!-- CRITERIA GROUPS -->
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">📋 Đánh giá theo tiêu chí buổi ${s.id}: ${s.topic}</div>
+        ${CRITERIA_GROUPS.map(grp=>`
+          <div style="margin-bottom:12px">
+            <div style="font-size:12px;font-weight:700;color:${grp.textColor};background:${grp.color};padding:4px 10px;border-radius:8px;display:inline-block;margin-bottom:7px">${grp.label}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${STU_CRITERIA[grp.key].map(c=>{
+                const checked = !!(crit[c.id]);
+                return `<button onclick="toggleCrit('${stu.id}',${s.id},'${c.id}',this)"
+                  style="padding:6px 12px;border-radius:20px;border:1.5px solid ${checked?grp.textColor:' var(--border)'};background:${checked?grp.color:'var(--card)'};cursor:pointer;font-family:Nunito,sans-serif;font-size:12px;font-weight:600;color:${checked?grp.textColor:'var(--muted)'};transition:all .15s;display:flex;align-items:center;gap:5px">
+                  <span style="font-size:14px">${c.icon}</span>${c.label}
+                </button>`;
+              }).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <!-- VOCAB MEMORY for this session -->
+      <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">
+          🎵 Từ vựng buổi này (${sessVocab.length} từ)
+          <span style="font-size:10px;font-weight:400;margin-left:8px">Nhấn để đánh dấu: · → ✅ → 🔄 → ❌</span>
+        </div>
+        <!-- Group by song -->
+        ${Array.from(new Set(sessVocab.map(v=>v.songId))).map(sid=>{
+          const songVocab = sessVocab.filter(v=>v.songId===sid);
+          return `<div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;padding:2px 8px;background:var(--bg);border-radius:6px;display:inline-block">${sid}. ${SONGS[sid].name}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px">
+              ${songVocab.map(v=>{
+                const key=`${sid}_${v.en}`;
+                const mem=vocabMem[key]||'';
+                const cls=MEM_CLS[mem]||'';
+                return `<button class="vm-word-btn ${cls}" onclick="cycleVocabMem('${stu.id}','${sid}','${v.en.replace(/'/g,"\\'")}',this)">
+                  <span>${v.en}</span><span class="vm-icon">${mem||'·'}</span>
+                </button>`;
+              }).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- QUICK NOTES + FREE TEXT -->
+      <div style="padding:14px 20px">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">📝 Ghi chú thêm</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
+          ${QUICK_NOTES.map(n=>`<button onclick="appendNote('${stu.id}',${s.id},\`${n}\`)" style="padding:4px 11px;border-radius:14px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-family:Nunito,sans-serif;font-size:11px;color:var(--muted);transition:all .15s" onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">${n}</button>`).join('')}
+        </div>
+        <textarea class="note-inp" id="note-${stu.id}-${s.id}"
+          placeholder="Ghi chú tự do: VD - Bé hát tốt bài số 2, cần luyện phần numbers 7-10..."
+          onchange="saveNote('${stu.id}',${s.id},this.value)">${esc(note)}</textarea>
+        <div style="text-align:right;margin-top:4px">
+          <button onclick="clearNote('${stu.id}',${s.id})" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer">🗑 Xoá ghi chú</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('sm-body').innerHTML = sessSelect + sessionsHtml;
+}
+
+function switchStuSess(stuId, sessId, btn){
+  // Hide all panels
+  document.querySelectorAll(`[id^="ssp-${stuId}-"]`).forEach(el=>el.style.display='none');
+  document.querySelectorAll(`[data-sess]`).forEach(b=>b.classList.remove('ticked'));
+  // Show target
+  const panel = document.getElementById(`ssp-${stuId}-${sessId}`);
+  if(panel) panel.style.display='block';
+  if(btn) btn.classList.add('ticked');
+}
+
+
+function toggleCrit(stuId,sessId,critId,btn){
+  const sr=getStuSess(stuId,sessId);
+  sr.criteria[critId]=!sr.criteria[critId];
+  saveStudents();
+  // Update button style
+  const allGroups=Object.values(STU_CRITERIA).flat();
+  const crit=allGroups.find(c=>c.id===critId);
+  const grp=CRITERIA_GROUPS.find(g=>STU_CRITERIA[g.key].find(c=>c.id===critId));
+  if(btn&&grp){
+    const on=sr.criteria[critId];
+    btn.style.borderColor=on?grp.textColor:'var(--border)';
+    btn.style.background=on?grp.color:'var(--card)';
+    btn.style.color=on?grp.textColor:'var(--muted)';
+  }
+}
+
+function appendNote(stuId,sessId,text){
+  const sr=getStuSess(stuId,sessId);
+  const ta=document.getElementById(`note-${stuId}-${sessId}`);
+  const cur=(ta?.value||'').trim();
+  const newVal=cur?(cur+' · '+text):text;
+  sr.note=newVal;
+  if(ta)ta.value=newVal;
+  saveStudents();
+}
+
+function clearNote(stuId,sessId){
+  const sr=getStuSess(stuId,sessId);
+  sr.note='';
+  const ta=document.getElementById(`note-${stuId}-${sessId}`);
+  if(ta)ta.value='';
+  saveStudents();
+  toast('🗑 Đã xoá ghi chú');
+}
+
+function cycleVocabMem(stuId,sid,en,btn){
+  const stu=getStu(stuId);if(!stu)return;
+  if(!stu.vocabMem)stu.vocabMem={};
+  const key=`${sid}_${en}`;
+  const cur=stu.vocabMem[key]||'';
+  const next=MEM_NEXT[cur];
+  if(next===''||next===undefined)delete stu.vocabMem[key];
+  else stu.vocabMem[key]=next;
+  saveStudents();
+  btn.className='vm-word-btn '+(MEM_CLS[next]||'');
+  btn.querySelector('.vm-icon').textContent=next||'·';
+}
+
+function toggleSA(head){const body=head.nextElementSibling;body.classList.toggle('open');head.querySelector('.sa-arr').style.transform=body.classList.contains('open')?'rotate(180deg)':'';}
+function setStuStar(stuId,sessId,n){
+  const sr=getStuSess(stuId,sessId);sr.stars=sr.stars===n?0:n;
+  const stu=getStu(stuId);stu.totalStars=Object.values(stu.sessions).reduce((a,s)=>a+(s.stars||0),0);
+  saveStudents();document.getElementById('sm-total').textContent='⭐ '+stu.totalStars;
+  const sp=document.getElementById(`sp-${stuId}-${sessId}`);
+  if(sp){sp.querySelectorAll('.sp-star').forEach((el,i)=>el.classList.toggle('lit',i<sr.stars));document.getElementById(`sp-val-${stuId}-${sessId}`).textContent=sr.stars?sr.stars+'/5':'';}
+}
+function toggleTick(stuId,sessId,ai,el){
+  const sr=getStuSess(stuId,sessId);const i=sr.ticks.indexOf(ai);
+  if(i>=0)sr.ticks.splice(i,1);else sr.ticks.push(ai);
+  saveStudents();el.classList.toggle('ticked',sr.ticks.includes(ai));
+}
+function saveNote(stuId,sessId,val){const sr=getStuSess(stuId,sessId);sr.note=val;saveStudents();}
+
+// ════════════════════════════════════════════
+//  PROGRESS PAGE
+// ════════════════════════════════════════════
+function renderProgress(){
+  const grid=document.getElementById('prog-grid');if(!grid)return;
+  grid.innerHTML=SESSIONS.map((s,i)=>{
+    const total=s.songs.reduce((a,sid)=>a+SONGS[sid].steps.length,0);
+    const done=s.songs.reduce((a,sid)=>a+SONGS[sid].steps.filter((_,si2)=>stepsDone[`${s.id}_${sid}_${si2}`]).length,0);
+    const pct=total?Math.round(done/total*100):0;
+    return `<div class="prog-card" onclick="switchSess(${i});goPage('lesson')">
+      <div class="pc-top"><div class="pc-num">${s.id}</div><div class="pc-title">${s.topic}</div><div class="pc-ph">${s.phase}</div></div>
+      <div class="pc-bar-wrap"><div class="pc-bar-fill" style="width:${pct}%"></div></div>
+      <div class="pc-stats"><span>${done}/${total} bước</span><span class="pc-done ${s.done?'yes':'no'}">${s.done?'✅ Xong':'Đang học'}</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('spt-body').innerHTML=Object.entries(SONGS).map(([sid,song])=>`
+    <div class="spt-row">
+      <div style="font-weight:700;color:var(--muted)">${sid}</div>
+      <div style="font-size:11px">${song.name.length>18?song.name.slice(0,18)+'…':song.name}</div>
+      ${SESSIONS.map(s=>{
+        if(!s.songs.includes(parseInt(sid)))return '<div><div class="spt-dot n">—</div></div>';
+        const sk=`${s.id}_${sid}`;const dc=song.steps.filter((_,si2)=>stepsDone[`${sk}_${si2}`]).length;
+        return `<div><div class="spt-dot ${dc===song.steps.length?'d':dc>0?'p':'n'}">${dc===song.steps.length?'✓':dc>0?dc:'·'}</div></div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function switchProgTab(tab,btn){
+  ['class','students','export'].forEach(t=>{
+    document.getElementById('ptab-'+t+'-body').style.display=t===tab?'block':'none';
+    document.getElementById('ptab-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='students')renderProgStudents(students[0]?.id||null);
+  if(tab==='export')renderYTSummary();
+  if(tab==='class')renderProgress();
+}
+
+function renderProgStudents(stuId){
+  const pills=document.getElementById('stu-pills');
+  if(pills)pills.innerHTML=students.map(s=>`<button class="fc-btn ${s.id===stuId?'active':''}" onclick="renderProgStudents('${s.id}')">${esc(s.name)}</button>`).join('');
+  const area=document.getElementById('stu-detail-area');if(!area)return;
+  if(!stuId||!students.length){area.innerHTML='<div style="padding:20px;color:var(--muted)">Chưa có học sinh. Thêm bé trong tab Khen thưởng.</div>';return;}
+  const stu=getStu(stuId);if(!stu){area.innerHTML='';return;}
+
+  // Stats
+  const vmEntries=Object.entries(stu.vocabMem||{});
+  const good=vmEntries.filter(([,v])=>v==='✅').length;
+  const review=vmEntries.filter(([,v])=>v==='🔄').length;
+  const bad=vmEntries.filter(([,v])=>v==='❌').length;
+  const totalVocab=Object.values(SONGS).reduce((a,s)=>a+s.vocab.length,0);
+  const totalStars=stu.totalStars||0;
+
+  // Criteria summary across all sessions
+  const allCritFlat=Object.values(STU_CRITERIA).flat();
+  const critCount={};
+  allCritFlat.forEach(c=>{
+    critCount[c.id]=Object.values(stu.sessions).filter(sr=>sr.criteria?.[c.id]).length;
+  });
+
+  area.innerHTML=`<div class="stu-detail-body">
+    <div class="stu-detail-head">
+      <div class="sd-av" style="background:${avColor(stu.name)}">${stu.photo?`<img src="${stu.photo}" style="width:100%;height:100%;object-fit:cover">`:stu.name.slice(0,2).toUpperCase()}</div>
+      <div><div class="sd-name">${esc(stu.name)}</div><div style="font-size:13px;color:var(--muted)">⭐ Tổng sao: ${totalStars}</div></div>
+      <div style="margin-left:auto;display:flex;gap:14px">
+        <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:var(--green-d)">${good}</div><div style="font-size:11px;color:var(--muted)">Nhớ tốt</div></div>
+        <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:#f57f17">${review}</div><div style="font-size:11px;color:var(--muted)">Cần ôn</div></div>
+        <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:var(--red)">${bad}</div><div style="font-size:11px;color:var(--muted)">Chưa nhớ</div></div>
+        <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:var(--muted)">${totalVocab-good-review-bad}</div><div style="font-size:11px;color:var(--muted)">Chưa đánh giá</div></div>
+      </div>
+    </div>
+
+    <!-- Criteria summary badges -->
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">📋 Tổng kết tiêu chí qua các buổi</div>
+      ${CRITERIA_GROUPS.map(grp=>`
+        <div style="margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:${grp.textColor};margin-bottom:5px">${grp.label}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            ${STU_CRITERIA[grp.key].map(c=>{
+              const cnt=critCount[c.id]||0;
+              const opacity=cnt>0?1:.35;
+              return `<span style="padding:4px 10px;border-radius:14px;background:${grp.color};color:${grp.textColor};font-size:11px;font-weight:600;opacity:${opacity};display:flex;align-items:center;gap:4px">
+                ${c.icon} ${c.label}${cnt>1?` <span style="background:${grp.textColor};color:white;border-radius:10px;padding:1px 5px;font-size:9px">${cnt}</span>`:''}
+              </span>`;
+            }).join('')}
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <!-- Per-session summary -->
+    <div style="padding:14px 20px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">📅 Chi tiết từng buổi</div>
+      ${SESSIONS.map(s=>{
+        const sr=stu.sessions[s.id];
+        const hasCrit=sr&&Object.values(sr.criteria||{}).some(Boolean);
+        if(!sr||(!sr.stars&&!sr.note&&!hasCrit))return '';
+        const allCrit=Object.values(STU_CRITERIA).flat();
+        const posCrit=allCrit.filter(c=>sr.criteria?.[c.id]&&!STU_CRITERIA.canHoTro.find(x=>x.id===c.id));
+        const negCrit=STU_CRITERIA.canHoTro.filter(c=>sr.criteria?.[c.id]);
+        return `<div style="margin-bottom:10px;padding:10px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-size:13px;font-weight:700;margin-bottom:6px">${s.phase} Buổi ${s.id}: ${s.topic} ${'⭐'.repeat(sr.stars||0)}</div>
+          ${posCrit.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${posCrit.map(c=>`<span style="padding:2px 8px;border-radius:10px;background:var(--green-l);color:var(--green-d);font-size:11px">${c.icon} ${c.label}</span>`).join('')}</div>`:''}
+          ${negCrit.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${negCrit.map(c=>`<span style="padding:2px 8px;border-radius:10px;background:var(--pink-l);color:var(--pink-d);font-size:11px">${c.icon} ${c.label}</span>`).join('')}</div>`:''}
+          ${sr.note?`<div style="font-size:12px;color:var(--muted);font-style:italic;background:var(--yellow-l);border-left:3px solid var(--yellow);padding:5px 9px;border-radius:0 7px 7px 0;margin-top:4px">"${esc(sr.note)}"</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+
+// ════════════════════════════════════════════
+//  VOCAB LAB
+// ════════════════════════════════════════════
+function getEmoji(w){return EMOJI_MAP[w.toLowerCase()]||'📖';}
+function imgOrEmoji(en,sz){const img=fcImages[en.toLowerCase()];return img?`<img src="${img}" alt="${esc(en)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:`<div class="fc-emoji" style="font-size:${sz||40}px">${getEmoji(en)}</div>`;}
+
+function renderVocab(){
+  const sel=document.getElementById('vsess-sel');
+  sel.innerHTML=`<button class="vsess-btn ${vsessFilter===0?'active':''}" onclick="setVSess(0,this)">Tất cả</button>`+SESSIONS.map((s,i)=>`<button class="vsess-btn ${vsessFilter===i+1?'active':''}" onclick="setVSess(${i+1},this)">${s.phase}${s.id}</button>`).join('');
+  const banner=document.getElementById('fc-target-banner');
+  const toBtn=document.getElementById('fc-target-only-btn');
+  if(vsessFilter===0){
+    const seen=new Set();const vocab=[];
+    Object.values(SONGS).forEach(song=>song.vocab.forEach(v=>{if(!seen.has(v.en)){seen.add(v.en);vocab.push({...v,isTarget:true});}}));
+    currentVocabList=vocab;
+    if(banner)banner.style.display='none';
+    if(toBtn)toBtn.style.display='none';
+    fcTargetOnly=false;
+    renderFCGrid(vocab);
+  }else{
+    const sess=SESSIONS[vsessFilter-1];
+    const targetSeen=new Set(),bonusSeen=new Set(),targetList=[],bonusList=[];
+    sess.songs.forEach((sid,idx)=>{
+      const song=SONGS[sid],type=sess.types[idx];
+      const {target,bonus}=splitVocab(song,type);
+      target.forEach(v=>{if(!targetSeen.has(v.en)){targetSeen.add(v.en);targetList.push({...v,isTarget:true});}});
+      bonus.forEach(v=>{if(!bonusSeen.has(v.en)&&!targetSeen.has(v.en)){bonusSeen.add(v.en);bonusList.push({...v,isTarget:false});}});
+    });
+    const phase=PHASE_TARGET[sess.types[0]]||{label:'Học',color:'#e3f2fd',tc:'#1565c0',desc:''};
+    const allVocab=fcTargetOnly?targetList:[...targetList,...bonusList];
+    currentVocabList=allVocab;
+    if(banner){
+      banner.style.display='block';banner.style.background=phase.color;
+      banner.style.borderColor=phase.tc+'66';banner.style.color=phase.tc;
+      banner.innerHTML=`🎯 Buổi ${sess.id} — <strong>${phase.label}</strong>: <strong>${targetList.length} từ cần nhớ</strong> (viền cam) · ${bonusList.length} từ giới thiệu thêm (mờ) · ${phase.desc}`;
+    }
+    if(toBtn){
+      toBtn.style.display='inline-flex';
+      toBtn.textContent=fcTargetOnly?'📚 Hiện tất cả ('+bonusList.length+' thêm)':'🎯 Chỉ từ cần nhớ ('+targetList.length+')';
+      toBtn.style.background=fcTargetOnly?'var(--teal)':'';toBtn.style.color=fcTargetOnly?'white':'';
+    }
+    renderFCGrid(allVocab);
+  }
+  renderGames();nextChallenge();
+}
+function renderFCGrid(vocab){
+  document.getElementById('fc-count').textContent=vocab.length+' từ';
+  document.getElementById('fc-grid').innerHTML=vocab.map((v,i)=>{
+    const isT=v.isTarget!==false;
+    const border=isT?'border:2.5px solid var(--orange);box-shadow:0 2px 10px rgba(255,152,0,.18)':'border:1.5px dashed #ddd;opacity:0.7';
+    const badge=isT?'':`<div style="position:absolute;top:5px;right:5px;font-size:9px;background:#eee;color:#aaa;border-radius:6px;padding:1px 5px;font-weight:700">+bonus</div>`;
+    return `<div class="fc" id="fc-${i}" style="position:relative">
+      <div class="fc-inner" onclick="openLightbox(${i})" style="${border};border-radius:14px">
+        <div class="fc-front"><div class="fc-img-area">${imgOrEmoji(v.en,38)}</div><div class="fc-word">${v.en}</div><div class="fc-vn-small">${v.vn}</div></div>
+        <div class="fc-back"><div class="fc-img-area">${imgOrEmoji(v.en,38)}</div><div class="fc-word">${v.en}</div><div class="fc-vn-small">${v.vn}</div></div>
+      </div>
+      ${badge}
+      <div class="fc-upload-overlay" title="Upload ảnh" onclick="uploadFCImg('${v.en.replace(/'/g,"\'")}')">📷</div>
+    </div>`;
+  }).join('');
+}
+let fcTargetOnly=false;
+function toggleTargetOnly(){if(vsessFilter===0)return;fcTargetOnly=!fcTargetOnly;renderVocab();}
+function setVSess(i,btn){vsessFilter=i;fcTargetOnly=false;document.querySelectorAll('.vsess-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderVocab();}
+function fcShuffle(){currentVocabList.sort(()=>Math.random()-.5);renderFCGrid(currentVocabList);toast('🔀 Đã trộn!');}
+function fcFlipAll(){document.querySelectorAll('.fc').forEach(c=>c.classList.toggle('flipped'));}
+function uploadFCImg(en){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{fcImages[en.toLowerCase()]=ev.target.result;save('sas_fcimgs',fcImages);renderVocab();toast('✅ Ảnh: '+en);};r.readAsDataURL(f);};inp.click();}
+function resetFCImages(){fcImages={};save('sas_fcimgs',fcImages);renderVocab();toast('🗑 Đã xoá ảnh');}
+
+function openLightbox(i){lbIdx=i;lbFlipped=false;document.getElementById('lb-card')?.classList.remove('flipped');updateLB();document.getElementById('lightbox').classList.add('open');}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
+function lbBgClick(e){if(e.target===document.getElementById('lightbox'))closeLightbox();}
+function lbFlip(){lbFlipped=!lbFlipped;document.getElementById('lb-card')?.classList.toggle('flipped',lbFlipped);}
+function lbPrev(e){e.stopPropagation();lbIdx=(lbIdx-1+currentVocabList.length)%currentVocabList.length;lbFlipped=false;document.getElementById('lb-card')?.classList.remove('flipped');updateLB();}
+function lbNext(e){e.stopPropagation();lbIdx=(lbIdx+1)%currentVocabList.length;lbFlipped=false;document.getElementById('lb-card')?.classList.remove('flipped');updateLB();}
+function updateLB(){
+  const v=currentVocabList[lbIdx];if(!v)return;
+  const img=fcImages[v.en.toLowerCase()];
+  const imgHtml=img?`<img src="${img}" alt="${esc(v.en)}" style="width:100%;height:100%;object-fit:cover;border-radius:14px">`:`<div class="lb-emoji">${getEmoji(v.en)}</div>`;
+  document.getElementById('lb-img-front').innerHTML=imgHtml;
+  document.getElementById('lb-img-back').innerHTML=imgHtml;
+  document.getElementById('lb-word-front').textContent=v.en;
+  document.getElementById('lb-vn-front').textContent='Nhấn để xem nghĩa';
+  document.getElementById('lb-word-back').textContent=v.en;
+  document.getElementById('lb-vn-back').textContent=v.vn;
+  document.getElementById('lb-counter').textContent=`${lbIdx+1} / ${currentVocabList.length}`;
+}
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('lightbox').classList.contains('open'))return;
+  if(e.key==='Escape')closeLightbox();
+  else if(e.key==='ArrowRight')lbNext(e);
+  else if(e.key==='ArrowLeft')lbPrev(e);
+  else if(e.key===' '){e.preventDefault();lbFlip();}
+});
+
+let challengeWords=[];
+function nextChallenge(){
+  if(!challengeWords.length)challengeWords=[...currentVocabList].sort(()=>Math.random()-.5);
+  const w=challengeWords.pop();
+  if(w){document.getElementById('chal-word').textContent=w.en;document.getElementById('chal-vn').textContent=w.vn;}
+}
+
+// Games
+const GAMES_DATA=[
+  {icon:'👋',name:'Slap the Card',tag:'Nhận biết',tc:'#1565c0',tb:'#e3f2fd',bc:'#1565c0',songs:'B2,B3,B8',how:'Trải thẻ ra sàn. GV nói từ → HS chạy lên vỗ đúng thẻ. Cả lớp đọc khi bé vỗ đúng.',steps:['Trải 5-8 thẻ ra sàn hoặc bảng','GV nói từ (không giơ thẻ) → 1-2 bé chạy vỗ','Tăng tốc dần','Cả lớp đọc to sau mỗi lượt']},
+  {icon:'🦘',name:'Jump and Say',tag:'Output',tc:'#880e4f',tb:'#fce4ec',bc:'#ad1457',songs:'B1,B3,B7',how:'GV giơ thẻ → HS nhảy lên và nói tên từ đó. Đơn giản, năng lượng cao.',steps:['GV giơ thẻ (không nói)','HS nhảy + hét tên từ','6-8 thẻ liên tiếp, tăng tốc','GV cũng nhảy cùng!']},
+  {icon:'⚽',name:'Passing the Ball',tag:'Hội thoại',tc:'#2e7d32',tb:'#e8f5e9',bc:'#2e7d32',songs:'B9,B10,B11',how:'HS ngồi vòng tròn, lăn bóng. Người nhận bóng nói câu chỉ định.',steps:['HS ngồi thành vòng tròn','GV lăn bóng đến bé nào → bé đó nói câu','VD: How old are you? → I am 4!','Nếu quên, cả lớp giúp cùng']},
+  {icon:'🖐',name:'Touch and Say',tag:'TPR',tc:'#e65100',tb:'#fff3e0',bc:'#e65100',songs:'B4,B5',how:'GV hô lệnh → HS chỉ bộ phận cơ thể hoặc làm hành động. Tốc độ tăng dần.',steps:["'Touch your eyes!' → HS chỉ mắt + nói 'Eyes!'",'Tiếp: ears, nose, arms, legs','Tăng tốc liên tiếp','GV nói sai → HS phát hiện và sửa']},
+  {icon:'✋',name:"Can / Can't Vote",tag:'Tư duy',tc:'#6a1b9a',tb:'#f3e5f5',bc:'#6a1b9a',songs:'B7',how:"GV giơ thẻ con vật → 'Can it fly?' → HS giơ tay YES hoặc NO. Không có đáp án sai.",steps:["GV giơ thẻ con vật: 'Can a fish fly?'","HS giơ tay: YES (2 tay) hoặc NO (lắc đầu)","GV phản ứng vui với cả hai ý kiến",'Tạo tranh luận nhẹ nhàng']},
+  {icon:'📦',name:'Sorting Game',tag:'Phân loại',tc:'#00695c',tb:'#e0f2f1',bc:'#00695c',songs:'B6 cuối buổi',how:'HS phân loại thẻ theo nhóm: rau củ / đồ chơi / động vật / màu sắc.',steps:['Trải hỗn hợp thẻ lên bàn','3 rổ/góc: Vegetables / Toys / Animals','HS lấy thẻ bỏ vào đúng rổ','GV quan sát không can thiệp']},
+  {icon:'⭐',name:'Star Challenge',tag:'Mastery',tc:'#f57f17',tb:'#fff8e1',bc:'#f57f17',songs:'B8,B9',how:'HS đọc 10 thẻ liên tiếp không có hình → 10/10 = ngôi sao vàng!',steps:['Dùng thẻ chỉ có chữ, không có hình','GV giơ thẻ nhanh liên tiếp','HS đọc to — đúng = cả lớp vỗ tay','10 thẻ đúng = nhận ngôi sao ⭐']},
+  {icon:'🎭',name:'Roleplay',tag:'Output cao',tc:'#880e4f',tb:'#ffd6e7',bc:'#880e4f',songs:'B9,B10,B11',how:'2-3 bé thực hành hội thoại thật theo cặp trước lớp.',steps:['Chia cặp: A + B đứng trước lớp',"A: 'Hello! What's your name?'",'B: tự giới thiệu','Rotate: cặp khác lên sau']}
+];
+function renderGames(){
+  document.getElementById('games-grid').innerHTML=GAMES_DATA.map((g,gi)=>`
+    <div class="game-card">
+      <div class="gc-head" style="background:${g.tb}22">
+        <span class="gc-icon">${g.icon}</span>
+        <span class="gc-name">${g.name}</span>
+        <span class="gc-tag" style="background:${g.tb};color:${g.tc}">${g.tag}</span>
+      </div>
+      <div class="gc-body">
+        <div class="gc-how">${g.how}</div>
+        <div class="gc-songs">📚 Dùng cho: ${g.songs}</div>
+        <button class="gc-btn" style="background:${g.bc}" onclick="toggleGameDetail(${gi},this)">▶ Xem chi tiết</button>
+        <div class="game-detail" id="gd-${gi}">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:7px;text-transform:uppercase">Các bước</div>
+          ${g.steps.map((s,si)=>`<div class="gd-step"><div class="gd-num" style="background:${g.bc}">${si+1}</div><span>${s}</span></div>`).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+function toggleGameDetail(gi,btn){const el=document.getElementById('gd-'+gi);const open=el.style.display==='block';el.style.display=open?'none':'block';btn.textContent=open?'▶ Xem chi tiết':'▲ Ẩn bớt';}
+
+// Camera
+async function toggleCam(){
+  const btn=document.getElementById('cam-btn'),status=document.getElementById('cam-status'),snap=document.getElementById('cam-snap');
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;document.getElementById('cam-video').srcObject=null;btn.textContent='▶ Bật camera';btn.classList.remove('stop');status.textContent='Camera đã tắt.';snap.style.display='none';return;}
+  try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});document.getElementById('cam-video').srcObject=camStream;btn.textContent='⏹ Tắt camera';btn.classList.add('stop');status.textContent='📸 Camera bật. Nhấn "Nhận diện ngay!" để Gemini nhận diện.';snap.style.display='block';}
+  catch(e){status.textContent='❌ Không bật được camera: '+e.message;}
+}
+async function snapAndAsk(){
+  if(!apiKey){toast('⚠ Cần API key!');return;}
+  const video=document.getElementById('cam-video'),canvas=document.getElementById('cam-canvas'),result=document.getElementById('cam-result');
+  canvas.width=video.videoWidth;canvas.height=video.videoHeight;canvas.getContext('2d').drawImage(video,0,0);
+  const base64=canvas.toDataURL('image/jpeg',.7).split(',')[1];
+  result.textContent='🔍 Gemini đang nhận diện...';
+  const curWord=document.getElementById('chal-word').textContent;
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:'image/jpeg',data:base64}},{text:`Bạn là trợ lý tiếng Anh mầm non vui vẻ. Nhìn ảnh và: 1) Nói tên tiếng Anh của vật thấy trong ảnh. 2) Nếu đúng từ thử thách "${curWord}": phản ứng "🎉 Đúng rồi! Excellent!" 3) Nếu sai: nói tên vật và khuyến khích. Trả lời ngắn, tiếng Việt, vui tươi.`}]}]})});
+    const d=await res.json();if(d.error)throw new Error(d.error.message);
+    result.textContent=d.candidates?.[0]?.content?.parts?.[0]?.text||'Không nhận diện được';
+  }catch(e){result.textContent='❌ Lỗi: '+e.message;}
+}
+
+// ── SOUND SLOTS ──
+const DEFAULT_SLOTS=[
+  {id:'att',  label:'Attention Bell',  emoji:'🔔', synth:'bell'},
+  {id:'ding', label:'3 Dings',         emoji:'✨', synth:'ding'},
+  {id:'clap', label:'Clapping!',       emoji:'👏', synth:'clap'},
+  {id:'wow',  label:'Wow! Great!',     emoji:'⭐', synth:'wow'},
+  {id:'clean',label:'Clean Up',        emoji:'🧹', synth:'cleanup'},
+  {id:'line', label:'Line Up',         emoji:'🚶', synth:'lineup'},
+];
+let customSnds=JSON.parse(localStorage.getItem('sas_csnds')||'null');
+if(!customSnds){customSnds=DEFAULT_SLOTS.map(d=>({...d,dataUrl:null}));save('sas_csnds',customSnds);}
+
+function initSoundSlots(){renderSoundSlots();}
+
+function renderSoundSlots(){
+  const el=document.getElementById('sound-slots');if(!el)return;
+  el.innerHTML=customSnds.map((s,i)=>{
+    const hasFile=!!s.dataUrl;
+    return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px">
+      <button onclick="playSlot(${i})" style="flex:1;display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:9px;border:1.5px solid ${hasFile?'var(--green)':'var(--border)'};background:${hasFile?'var(--green-l)':'var(--bg)'};cursor:pointer;font-family:Nunito,sans-serif;font-size:11px;font-weight:700;color:${hasFile?'var(--green-d)':'var(--muted)'};transition:all .15s;min-width:0">
+        <span style="font-size:16px;flex-shrink:0">${s.emoji||'🎵'}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.label)}</span>
+        ${hasFile?'<span style="font-size:9px;opacity:.7">✅</span>':''}
+      </button>
+      <button onclick="uploadSlot(${i})" title="Upload MP3" style="width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:12px;flex-shrink:0">📁</button>
+      <button onclick="editSlotName(${i})" title="Đổi tên" style="width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:12px;flex-shrink:0">✏️</button>
+      <button onclick="removeSlot(${i})" title="Xoá" style="width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:11px;color:var(--muted);flex-shrink:0">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function playSlot(i){
+  const s=customSnds[i];if(!s)return;
+  if(s.dataUrl){
+    if(!customAudioObjs[i]||customAudioObjs[i].src!==s.dataUrl){customAudioObjs[i]=new Audio(s.dataUrl);}
+    customAudioObjs[i].currentTime=0;customAudioObjs[i].play();
+  } else if(s.synth){playSnd(s.synth,null);}
+}
+
+function uploadSlot(i){
+  const inp=document.createElement('input');inp.type='file';inp.accept='audio/*';
+  inp.onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      customSnds[i].dataUrl=ev.target.result;
+      customAudioObjs[i]=null;
+      save('sas_csnds',customSnds);renderSoundSlots();
+      toast('✅ Upload xong: '+customSnds[i].label);
+    };r.readAsDataURL(f);
+  };inp.click();
+}
+
+function editSlotName(i){
+  const s=customSnds[i];
+  window._editSlotIdx=i;
+  document.getElementById('edit-slot-label').value=s.label;
+  document.getElementById('edit-slot-emoji').value=s.emoji||'🎵';
+  openModal('edit-slot-modal');
+}
+
+function confirmEditSlot(){
+  const i=window._editSlotIdx;
+  if(i===undefined)return;
+  customSnds[i].label=document.getElementById('edit-slot-label').value.trim()||customSnds[i].label;
+  customSnds[i].emoji=document.getElementById('edit-slot-emoji').value.trim().slice(0,2)||customSnds[i].emoji;
+  save('sas_csnds',customSnds);renderSoundSlots();closeModal('edit-slot-modal');toast('✅ Đã cập nhật!');
+}
+
+function removeSlot(i){customSnds.splice(i,1);save('sas_csnds',customSnds);renderSoundSlots();}
+
+function addSoundSlot(){
+  customSnds.push({id:'c'+Date.now(),label:'Âm thanh mới',emoji:'🎵',dataUrl:null,synth:null});
+  save('sas_csnds',customSnds);renderSoundSlots();
+  setTimeout(()=>uploadSlot(customSnds.length-1),100);
+}
+
+function renderCustomSnds(){renderSoundSlots();}
+function uploadCustomSnd(){addSoundSlot();}
+
+
+// ════════════════════════════════════════════
+//  EXPORT
+// ════════════════════════════════════════════
+function exportPDF(mode){
+  const pw=window.open('','_blank','width=900,height=700');
+  pw.document.write(buildPDF(mode));pw.document.close();pw.focus();
+  setTimeout(()=>pw.print(),800);
+}
+function buildPDF(mode){
+  const date=new Date().toLocaleDateString('vi-VN');
+  const AVC=['#f06292','#26c6a0','#42a5f5','#ffa726','#9c6fef','#ef5350','#26a69a','#5c6bc0','#ec407a','#66bb6a'];
+  const SACTS=['Đọc thẻ tốt','Hát theo','Chơi game','Nói câu đầy đủ','Tự tin phát biểu','Làm TPR','Tương tác bạn'];
+  const MC={'✅':'#e8f5e9','🔄':'#fffde7','❌':'#ffebee','':'#f5f5f5'};
+  const MT={'✅':'#2e7d32','🔄':'#f57f17','❌':'#c62828','':'#888'};
+  const css=`@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@400;600;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Nunito',sans-serif;color:#1a1a2e;background:white;font-size:13px;line-height:1.5}
+    @media print{body{font-size:11px}.pb{page-break-before:always}.nb{page-break-inside:avoid}}
+    .cover{background:linear-gradient(135deg,#fff0f5,#f3eeff,#e0faf3);padding:36px 44px;border-bottom:3px solid #f06292}
+    .cover h1{font-family:'Baloo 2',cursive;font-size:26px;font-weight:800;color:#c2185b;margin-bottom:4px}
+    .sec{padding:20px 32px}h2{font-family:'Baloo 2',cursive;font-size:17px;font-weight:800;margin-bottom:14px;padding-bottom:7px;border-bottom:2px solid #ebebeb}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px}th{background:#f5f5f5;padding:8px 11px;text-align:left;font-size:11px;font-weight:700;color:#666;border-bottom:2px solid #ebebeb}
+    td{padding:8px 11px;border-bottom:1px solid #ebebeb;font-size:12px;vertical-align:top}tr:last-child td{border-bottom:none}
+    .ok{background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:6px;font-weight:700;font-size:11px}
+    .no{background:#f5f5f5;color:#888;padding:2px 8px;border-radius:6px;font-size:11px}
+    .pb2{height:5px;background:#ebebeb;border-radius:3px;overflow:hidden;width:80px;display:inline-block;vertical-align:middle;margin-right:5px}
+    .pbf{height:100%;border-radius:3px;background:linear-gradient(90deg,#42a5f5,#9c6fef)}
+    .sb{background:#fafafa;border-radius:12px;border:1px solid #e0e0e0;margin-bottom:18px;overflow:hidden}
+    .sh{display:flex;align-items:center;gap:12px;padding:13px 18px;background:linear-gradient(135deg,#fff8e7,#fff0f5)}
+    .av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',cursive;font-size:17px;font-weight:800;color:white;flex-shrink:0;overflow:hidden}
+    .av img{width:100%;height:100%;object-fit:cover}.sn{font-family:'Baloo 2',cursive;font-size:19px;font-weight:800;flex:1}
+    .sr{padding:10px 18px;border-top:1px solid #ebebeb}.st{font-size:12px;font-weight:700;color:#424242;margin-bottom:6px}
+    .ticks{display:flex;flex-wrap:wrap;gap:4px;margin:5px 0}.tick{padding:2px 8px;border-radius:12px;background:#e8f5e9;color:#2e7d32;font-size:10px;font-weight:700;border:1px solid #a5d6a7}
+    .note{background:#fffde7;border-left:3px solid #ffd54f;padding:6px 10px;border-radius:0 7px 7px 0;font-size:11px;font-style:italic;color:#5d4037;margin-top:5px}
+    .vg{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:6px 0}
+    .vc{padding:4px 7px;border-radius:7px;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:3px}`;
+  let body='';
+  if(mode==='all'){
+    body+=`<div class="cover"><h1>🌟 Speak & Shine — Báo cáo tiến độ</h1><div style="font-size:14px;color:#7a4fa0;font-weight:600">Fairy Home Academy · 10 buổi</div><div style="font-size:12px;color:#888;margin-top:5px">Ngày: ${date} · Học sinh: ${students.length}</div></div>`;
+    body+=`<div class="sec"><h2>📊 Tiến độ 10 buổi</h2><table><thead><tr><th>Buổi</th><th>Chủ đề</th><th>Tiến độ</th><th>Trạng thái</th></tr></thead><tbody>`;
+    SESSIONS.forEach(s=>{const tot=s.songs.reduce((a,sid)=>a+SONGS[sid].steps.length,0),done=s.songs.reduce((a,sid)=>a+SONGS[sid].steps.filter((_,si)=>stepsDone[`${s.id}_${sid}_${si}`]).length,0),pct=tot?Math.round(done/tot*100):0;body+=`<tr><td><strong>${s.phase}${s.id}</strong></td><td>${s.topic}</td><td><div class="pb2"><div class="pbf" style="width:${pct}%"></div></div>${pct}%</td><td><span class="${s.done?'ok':'no'}">${s.done?'✅ Xong':'Đang học'}</span></td></tr>`;});
+    body+=`</tbody></table>`;
+    if(students.length){body+=`<h2>👨‍👩‍👧 Tổng kết học sinh</h2><table><thead><tr><th>Học sinh</th><th>Tổng sao</th><th>Nhớ tốt</th><th>Cần ôn</th><th>Chưa nhớ</th></tr></thead><tbody>`;
+      students.forEach(stu=>{const vm=Object.values(stu.vocabMem||{});body+=`<tr><td><strong>${stu.name}</strong></td><td>${'⭐'.repeat(Math.min(stu.totalStars,5))} ${stu.totalStars}</td><td style="color:#2e7d32;font-weight:700">${vm.filter(v=>v==='✅').length}</td><td style="color:#f57f17;font-weight:700">${vm.filter(v=>v==='🔄').length}</td><td style="color:#c62828;font-weight:700">${vm.filter(v=>v==='❌').length}</td></tr>`;});
+      body+=`</tbody></table>`;}
+    body+=`</div>`;
+  }
+  if(mode==='students'){
+    body+=`<div class="cover"><h1>👨‍👩‍👧 Nhận xét học sinh</h1><div style="font-size:14px;color:#7a4fa0;font-weight:600">Fairy Home Academy · ${date}</div><div style="font-size:12px;color:#888;margin-top:5px">${students.length} học sinh</div></div>`;
+    if(!students.length){body+='<div class="sec"><p style="color:#888">Chưa có học sinh.</p></div>';}
+    else students.forEach((stu,si)=>{
+      const ci=Math.abs([...stu.name].reduce((a,c)=>a+c.charCodeAt(0),0))%AVC.length;
+      body+=`<div class="sec ${si>0?'pb':''}"><div class="sb nb"><div class="sh">`;
+      if(stu.photo)body+=`<div class="av"><img src="${stu.photo}" alt="${stu.name}"></div>`;
+      else body+=`<div class="av" style="background:${AVC[ci]}">${stu.name.slice(0,2).toUpperCase()}</div>`;
+      body+=`<div class="sn">${stu.name}</div><div style="font-size:16px;color:#ffa726">⭐ ${stu.totalStars} sao</div></div>`;
+      // Vocab memory
+      const vmEntries=Object.entries(stu.vocabMem||{});
+      if(vmEntries.length){body+=`<div style="padding:10px 18px;border-top:1px solid #ebebeb"><div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px">🎵 Từ vựng</div><div class="vg">`;
+        Object.entries(SONGS).forEach(([sid,song])=>{song.vocab.forEach(v=>{const m=stu.vocabMem?.[`${sid}_${v.en}`]||'';body+=`<div class="vc" style="background:${MC[m]};color:${MT[m]}"><span>${v.en}</span><span>${m||'·'}</span></div>`;});});
+        body+=`</div></div>`;}
+      // Sessions
+      SESSIONS.forEach(s=>{const sr=stu.sessions[s.id];if(!sr||(!sr.stars&&!sr.note&&!sr.ticks?.length))return;
+        body+=`<div class="sr nb"><div class="st">${s.phase} Buổi ${s.id}: ${s.topic} ${'⭐'.repeat(sr.stars||0)}</div>`;
+        if(sr.ticks?.length)body+=`<div class="ticks">${sr.ticks.map(i=>`<div class="tick">✔ ${SACTS[i]}</div>`).join('')}</div>`;
+        if(sr.note)body+=`<div class="note">📝 ${sr.note}</div>`;
+        body+=`</div>`;});
+      body+=`</div></div>`;
+    });
+  }
+  return `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><title>Speak & Shine</title><style>${css}</style></head><body>${body}
+<!-- ══ ADD CARD MODAL ══ -->
+<div class="modal-bg" id="add-card-modal">
+  <div class="modal-box" style="min-width:300px">
+    <div class="modal-title">➕ Thêm thẻ từ vựng</div>
+    <label style="font-size:12px;font-weight:700;color:var(--muted)">Từ tiếng Anh *</label>
+    <input id="new-card-en" class="modal-inp" placeholder="e.g. apple" style="margin-bottom:8px"/>
+    <label style="font-size:12px;font-weight:700;color:var(--muted)">Nghĩa tiếng Việt *</label>
+    <input id="new-card-vn" class="modal-inp" placeholder="e.g. táo" style="margin-bottom:8px"/>
+    <label style="font-size:12px;font-weight:700;color:var(--muted)">Emoji (tuỳ chọn)</label>
+    <input id="new-card-emoji" class="modal-inp" placeholder="🍎" style="margin-bottom:8px"/>
+    <label style="font-size:12px;font-weight:700;color:var(--muted)">Thêm sau bài hát</label>
+    <select id="new-card-pos" class="modal-inp" style="margin-bottom:14px">
+      <option value="">-- Tất cả buổi --</option>
+    </select>
+    <select id="new-card-after" class="modal-inp" style="margin-bottom:14px;display:none">
+      <option value="">-- Chọn bài --</option>
+    </select>
+    <div class="modal-btns">
+      <button class="modal-btn-ok" onclick="confirmAddCard()">✅ Thêm</button>
+      <button class="modal-btn-cancel" onclick="closeModal('add-card-modal')">Huỷ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT SLOT MODAL ══ -->
+<div class="modal-bg" id="edit-slot-modal">
+  <div class="modal-box" style="min-width:260px">
+    <div class="modal-title">✏️ Đổi tên âm thanh</div>
+    <label style="font-size:12px;font-weight:700;color:var(--muted)">Tên hiển thị</label>
+    <input id="edit-slot-label" class="modal-inp" style="margin-bottom:8px"/>
+    <label style="font-size:12px;font-weight:700;color:var(--muted)">Emoji</label>
+    <input id="edit-slot-emoji" class="modal-inp" placeholder="🎵" style="margin-bottom:14px"/>
+    <div class="modal-btns">
+      <button class="modal-btn-ok" onclick="confirmEditSlot()">✅ Lưu</button>
+      <button class="modal-btn-cancel" onclick="closeModal('edit-slot-modal')">Huỷ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CHALLENGE + CAM hidden elements ══ -->
+<!-- chal-word/chal-vn: hidden state holders used by nextChallenge() -->
+<span id="chal-word" style="display:none"></span>
+<span id="chal-vn" style="display:none"></span>
+<!-- Camera elements (used by toggleCam/snapAndAsk) -->
+<div id="cam-section" style="display:none">
+  <button id="cam-btn" onclick="toggleCam()" style="padding:7px 16px;border:none;border-radius:8px;background:var(--teal);color:white;cursor:pointer;font-family:Nunito,sans-serif;font-size:13px;font-weight:700;margin-bottom:8px">▶ Bật camera</button>
+  <video id="cam-video" autoplay playsinline></video>
+  <canvas id="cam-canvas"></canvas>
+  <div id="cam-status" class="cam-status"></div>
+  <div id="cam-result" class="cam-result"></div>
+  <button id="cam-snap" class="cam-snap-btn" onclick="snapAndAsk()">📸 Nhận diện ngay!</button>
+</div>
+</body></html>`;
+}
+
+function exportJSON(){exportFullData();}// legacy compat
+
+function exportFullData(){
+  const data={
+    v:2,
+    exportedAt:new Date().toISOString(),
+    exportedBy:'Speak & Shine',
+    // học sinh + toàn bộ nhận xét / vocabMem / sessions
+    students: students,
+    // tiến độ bước dạy từng bài
+    stepsDone: stepsDone,
+    // link youtube / drive từng bài
+    songLinks: songLinks,
+    // buổi đã hoàn thành
+    sessDone: sessDone,
+    // sao cả lớp
+    stars: stars,
+    // lịch sử khen thưởng
+    rewardHist: rewardHist,
+  };
+  // Không export ảnh (quá nặng) — ghi chú rõ
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='speak-shine-data_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  toast('💾 Đã xuất! Gửi file này cho GV khác.');
+}
+
+function importFullData(event){
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      const status=document.getElementById('import-status');
+      let log=[];
+
+      // Import students (merge — không xóa HS cũ)
+      if(data.students&&Array.isArray(data.students)){
+        let added=0;
+        data.students.forEach(s=>{
+          if(!students.find(x=>x.id===s.id)){
+            // new student
+            students.push(s); added++;
+          } else {
+            // merge sessions/vocabMem/notes
+            const existing=students.find(x=>x.id===s.id);
+            if(s.sessions) Object.assign(existing.sessions, s.sessions);
+            if(s.vocabMem) existing.vocabMem={...existing.vocabMem,...s.vocabMem};
+            if(s.totalStars&&s.totalStars>existing.totalStars) existing.totalStars=s.totalStars;
+          }
+        });
+        saveStudents();
+        log.push(`👨‍👩‍👧 ${data.students.length} học sinh (${added} mới, ${data.students.length-added} đã gộp nhận xét)`);
+      }
+
+      // Import stepsDone
+      if(data.stepsDone){
+        Object.assign(stepsDone, data.stepsDone);
+        save('sas_steps',stepsDone);
+        const n=Object.keys(data.stepsDone).length;
+        log.push(`✅ ${n} bước dạy`);
+      }
+
+      // Import songLinks (YouTube / Drive)
+      if(data.songLinks){
+        Object.assign(songLinks, data.songLinks);
+        save('sas_links',songLinks);
+        // Apply to SONGS
+        Object.entries(songLinks).forEach(([id,l])=>{if(SONGS[id]){SONGS[id].yt=l.yt||'';SONGS[id].drive=l.drive||'';}});
+        const n=Object.keys(data.songLinks).length;
+        log.push(`🎵 ${n} link YouTube/Drive`);
+      }
+
+      // Import sessDone
+      if(data.sessDone){
+        Object.assign(sessDone,data.sessDone);
+        save('sas_done',sessDone);
+        SESSIONS.forEach(s=>{if(sessDone[s.id])s.done=true;});
+      }
+
+      // Import stars
+      if(data.stars&&data.stars>stars){
+        stars=data.stars; save('sas_stars',String(stars));
+        log.push(`⭐ ${stars} sao`);
+      }
+
+      // Re-render
+      renderReward();
+      renderSessContent();
+      renderSessBar();
+      renderProgress();
+      renderYTSummary();
+
+      // Show status
+      if(status){
+        status.style.display='block';
+        status.style.background='#e8f5e9';status.style.color='#2e7d32';status.style.border='1.5px solid #a5d6a7';
+        status.innerHTML='✅ Import thành công!<br><span style="font-weight:400;font-size:12px">'+log.join(' · ')+'</span>';
+        setTimeout(()=>status.style.display='none',6000);
+      }
+      toast('✅ Import xong!');
+    }catch(err){
+      const status=document.getElementById('import-status');
+      if(status){status.style.display='block';status.style.background='#ffebee';status.style.color='#c62828';status.style.border='1.5px solid #ef9a9a';status.textContent='❌ Lỗi đọc file: '+err.message;}
+      toast('❌ File không hợp lệ!');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value=''; // reset input
+}
+
+function renderYTSummary(){
+  const el=document.getElementById('yt-links-summary'); if(!el) return;
+  const rows=Object.entries(SONGS).map(([id,song])=>{
+    const link=songLinks[id]?.yt||'';
+    const dot=link?'🟢':'⚪';
+    return `<div>${dot} <strong>Bài ${id}</strong>: ${song.name} ${link?`— <a href="${link}" target="_blank" style="color:var(--blue);font-size:11px">▶ ${link.slice(0,45)}...</a>`:'<span style="color:#ccc">chưa có link</span>'}</div>`;
+  }).join('');
+  el.innerHTML=rows||'<span style="color:#ccc">Chưa có link nào</span>';
+}
+
+function copyYTLinks(){
+  const lines=Object.entries(SONGS).filter(([id])=>songLinks[id]?.yt).map(([id,song])=>`Bài ${id} - ${song.name}: ${songLinks[id].yt}`).join('\n');
+  if(!lines){toast('Chưa có link nào!');return;}
+  navigator.clipboard.writeText(lines).then(()=>toast('📋 Đã copy '+Object.keys(songLinks).length+' link!')).catch(()=>toast('⚠ Không copy được — thử trên Chrome'));
+}
+async function genParentMsg(){
+  if(!apiKey){toast('⚠ Cần API key!');return;}
+  const s=SESSIONS[curSess];const vocab=[...new Set(s.songs.flatMap(sid=>SONGS[sid].vocab.map(v=>v.en)))].slice(0,8).join(', ');
+  const el=document.getElementById('parent-msg-out');el.style.display='block';el.textContent='✨ Đang tạo...';
+  try{const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:`Viết tin nhắn gửi phụ huynh sau buổi ${s.id} "${s.topic}" chương trình Speak and Shine mầm non. Từ vựng đã học: ${vocab}. 4-5 câu thân thiện + 1 hoạt động đơn giản ở nhà + emoji vui.`}]}]})});const d=await res.json();el.textContent=d.candidates?.[0]?.content?.parts?.[0]?.text||'Lỗi';}
+  catch(e){el.textContent='❌ '+e.message;}
+}
+
+// ════════════════════════════════════════════
+//  API KEY & GEMINI
+// ════════════════════════════════════════════
+function updateKeyDot(){const d=document.getElementById('key-dot');if(d)d.className='key-dot'+(apiKey?' ok':'');}
+function saveApiKey(){apiKey=document.getElementById('api-key-inp').value.trim();save('gemini_key',apiKey);closeModal('api-modal');updateKeyDot();toast('✅ Đã lưu API key!');}
+function openApiModal(){document.getElementById('api-key-inp').value=apiKey;openModal('api-modal');}
+
+async function callGemini(prompt){
+  if(!apiKey){toast('⚠ Cần API key!');return null;}
+  const out=document.getElementById('ai-out'),btn=document.getElementById('ai-ask');
+  if(out){out.textContent='✨ Đang suy nghĩ...';out.className='ai-out loading';}if(btn)btn.disabled=true;
+  try{const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});const d=await r.json();if(d.error)throw new Error(d.error.message);const txt=d.candidates?.[0]?.content?.parts?.[0]?.text||'Không có kết quả';if(out){out.textContent=txt;out.className='ai-out';}updateKeyDot();return txt;}
+  catch(e){if(out){out.textContent='❌ '+e.message;out.className='ai-out';}toast('❌ '+e.message);return null;}
+  finally{if(btn)btn.disabled=false;}
+}
+function getSessCtx(){const s=SESSIONS[curSess];const vocab=[...new Set(s.songs.flatMap(sid=>SONGS[sid].vocab.map(v=>v.en)))].slice(0,12).join(', ');return `GV tiếng Anh mầm non (3-4 tuổi) VN. Speak and Shine. Buổi ${s.id}: "${s.topic}" (${s.pLabel}). Từ vựng: ${vocab}.`;}
+async function aiQ(t){const ctx=getSessCtx(),s=SESSIONS[curSess];const p={tips:`${ctx} Gợi ý 3-4 mẹo dạy ngắn gọn, kèm ví dụ cụ thể.`,diff:`${ctx} HS không tập trung — 2-3 cách xử lý cụ thể.`,game:`${ctx} 1 game nhanh 3 phút khi lớp mất năng lượng.`,msg:`${ctx} Tin nhắn 3-4 câu gửi PH + 1 hoạt động nhà.`};await callGemini(p[t]);}
+async function aiCustom(){const q=document.getElementById('ai-inp')?.value?.trim();if(!q)return;await callGemini(getSessCtx()+' Câu hỏi: '+q);document.getElementById('ai-inp').value='';}
+
+// ════════════════════════════════════════════
+//  LIGHTBOX HTML (injected)
+// ════════════════════════════════════════════
+document.body.insertAdjacentHTML('beforeend',`
+<div class="lightbox" id="lightbox" onclick="lbBgClick(event)">
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <div class="lb-card" id="lb-card" onclick="lbFlip()">
+    <div class="lb-inner">
+      <div class="lb-face front">
+        <div class="lb-img" id="lb-img-front"><div class="lb-emoji">📖</div></div>
+        <div class="lb-word" id="lb-word-front">—</div>
+        <div class="lb-vn" id="lb-vn-front"></div>
+      </div>
+      <div class="lb-face back">
+        <div class="lb-img" id="lb-img-back"><div class="lb-emoji">📖</div></div>
+        <div class="lb-word" id="lb-word-back">—</div>
+        <div class="lb-vn" id="lb-vn-back"></div>
+      </div>
+    </div>
+  </div>
+  <div class="lb-hint">Nhấn thẻ để lật · Space · ESC đóng</div>
+  <div class="lb-nav">
+    <button class="lb-nav-btn" onclick="lbPrev(event)">← Trước</button>
+    <span class="lb-counter" id="lb-counter">1 / 1</span>
+    <button class="lb-nav-btn" onclick="lbNext(event)">Tiếp →</button>
+  </div>
+</div>`);
+
+
+// Position select toggle
+document.addEventListener('change', e=>{
+  if(e.target.id==='new-card-pos'){
+    const el=document.getElementById('new-card-after');
+    if(el)el.style.display=e.target.value==='after'?'block':'none';
+  }
+});
+
+
+// ── INIT ──
+// ══════════════════════════════════════════════════════
+//  ☁️  FIREBASE SYNC
+// ══════════════════════════════════════════════════════
+let fbDb=null, fbClassId='', fbUnsub=null;
+
+function fbDot(state){
+  const d=document.getElementById('fb-dot');
+  const l=document.getElementById('fb-label');
+  if(!d)return;
+  if(state==='on'){d.className='key-dot ok';if(l)l.textContent='☁️ Sync ✅';}
+  else if(state==='syncing'){d.className='key-dot';d.style.background='#ffa726';if(l)l.textContent='☁️ Syncing...';}
+  else{d.className='key-dot';if(l)l.textContent='☁️ Sync';}
+}
+
+function fbStatusBox(msg,type='ok'){
+  const el=document.getElementById('fb-status-box');if(!el)return;
+  el.style.display='block';
+  el.style.background=type==='ok'?'#e8f5e9':type==='err'?'#ffebee':'#fff8e1';
+  el.style.color=type==='ok'?'#2e7d32':type==='err'?'#c62828':'#f57f17';
+  el.style.border=`1.5px solid ${type==='ok'?'#a5d6a7':type==='err'?'#ef9a9a':'#ffe082'}`;
+  el.textContent=msg;
+}
+
+async function connectFirebase(){
+  const configRaw=document.getElementById('fb-config-inp')?.value?.trim();
+  const classId=document.getElementById('fb-class-id')?.value?.trim();
+  if(!configRaw||!classId){fbStatusBox('Vui lòng nhập đủ Tên lớp và Firebase config','err');return;}
+
+  let config;
+  try{
+    // Accept both object literal and JSON
+    const cleaned=configRaw.replace(/(\w+):/g,'"$1":').replace(/'/g,'"');
+    config=JSON.parse(cleaned.startsWith('{')?cleaned:'{'+cleaned+'}');
+  }catch(e){
+    // Try eval-style parse
+    try{config=Function('return ('+configRaw+')')();}
+    catch(e2){fbStatusBox('Config không hợp lệ — hãy copy đúng đoạn { apiKey:... }','err');return;}
+  }
+
+  const btn=document.getElementById('fb-connect-btn');
+  if(btn){btn.disabled=true;btn.textContent='Đang kết nối...';}
+  fbStatusBox('Đang kết nối...','info');
+
+  try{
+    const{initializeApp,getFirestore}=window._fbMods||{};
+    if(!initializeApp){fbStatusBox('Firebase SDK chưa load — thử reload trang','err');if(btn){btn.disabled=false;btn.textContent='🔗 Kết nối';}return;}
+
+    const app=initializeApp(config,'sas-'+classId);
+    fbDb=getFirestore(app);
+    fbClassId=classId;
+    localStorage.setItem('fb_config',JSON.stringify(config));
+    localStorage.setItem('fb_class_id',classId);
+
+    // Test write
+    const{doc,setDoc}=window._fbMods;
+    await setDoc(doc(fbDb,'sas_'+classId,'_ping'),{t:Date.now()});
+
+    fbDot('on');
+    fbStatusBox('✅ Kết nối thành công!','ok');
+    showFbConnected();
+    startFbListener();
+    toast('☁️ Firebase kết nối thành công!');
+  }catch(e){
+    fbStatusBox('❌ Lỗi: '+e.message,'err');
+    if(btn){btn.disabled=false;btn.textContent='🔗 Kết nối';}
+  }
+}
+
+function showFbConnected(){
+  document.getElementById('fb-setup-area').style.display='none';
+  document.getElementById('fb-connected-area').style.display='block';
+  const lbl=document.getElementById('fb-connected-label');
+  if(lbl)lbl.textContent='Lớp: '+fbClassId;
+}
+
+function fbDisconnect(){
+  if(fbUnsub){fbUnsub();fbUnsub=null;}
+  fbDb=null;fbClassId='';
+  localStorage.removeItem('fb_config');
+  localStorage.removeItem('fb_class_id');
+  fbDot('off');
+  document.getElementById('fb-setup-area').style.display='block';
+  document.getElementById('fb-connected-area').style.display='none';
+  closeModal('firebase-modal');
+  toast('🔌 Đã ngắt kết nối Firebase');
+}
+
+// Push toàn bộ dữ liệu lên Firestore
+async function fbPushAll(){
+  if(!fbDb){toast('Chưa kết nối Firebase!');return;}
+  fbDot('syncing');
+  const{doc,setDoc,writeBatch,collection}=window._fbMods;
+  try{
+    const batch=writeBatch(fbDb);
+    const prefix='sas_'+fbClassId;
+
+    // Meta: links, steps, sessDone, stars
+    batch.set(doc(fbDb,prefix,'_meta'),{
+      songLinks,stepsDone,sessDone,stars,rewardHist:rewardHist.slice(0,20),
+      updatedAt:Date.now(),updatedBy:navigator.userAgent.slice(0,30)
+    });
+
+    // Students (each as own doc for granular merge)
+    students.forEach(stu=>{
+      // Don't include raw base64 photo (too large) — only include photoUrl (Storage URL)
+      const s={...stu};
+      delete s.photo; // raw base64 stays local only
+      // photoUrl (Firebase Storage URL) is fine to sync
+      batch.set(doc(fbDb,prefix,'stu_'+stu.id),s);
+    });
+
+    await batch.commit();
+    fbDot('on');
+    const t=new Date().toLocaleTimeString('vi');
+    const el=document.getElementById('fb-sync-time');
+    if(el)el.textContent='Đẩy lên lúc '+t;
+    toast('⬆️ Đã đẩy dữ liệu lên cloud!');
+  }catch(e){fbDot('on');toast('❌ Lỗi push: '+e.message);}
+}
+
+// Pull dữ liệu từ Firestore về
+async function fbPullAll(){
+  if(!fbDb){toast('Chưa kết nối Firebase!');return;}
+  fbDot('syncing');
+  try{
+    await applyFbSnapshot();
+    fbDot('on');
+    const t=new Date().toLocaleTimeString('vi');
+    const el=document.getElementById('fb-sync-time');
+    if(el)el.textContent='Tải về lúc '+t;
+    toast('⬇️ Đã tải dữ liệu từ cloud!');
+  }catch(e){fbDot('on');toast('❌ Lỗi pull: '+e.message);}
+}
+
+async function applyFbSnapshot(){
+  const{doc,getDoc,getDocs,collection}=window._fbMods;
+  const prefix='sas_'+fbClassId;
+
+  // Meta
+  const metaSnap=await getDoc(doc(fbDb,prefix,'_meta'));
+  if(metaSnap.exists()){
+    const m=metaSnap.data();
+    if(m.songLinks){Object.assign(songLinks,m.songLinks);save('sas_links',songLinks);Object.entries(songLinks).forEach(([id,l])=>{if(SONGS[id]){SONGS[id].yt=l.yt||'';SONGS[id].drive=l.drive||'';}});}
+    if(m.stepsDone){Object.assign(stepsDone,m.stepsDone);save('sas_steps',stepsDone);}
+    if(m.sessDone){Object.assign(sessDone,m.sessDone);save('sas_done',sessDone);SESSIONS.forEach(s=>{if(sessDone[s.id])s.done=true;});}
+    if(m.stars>stars){stars=m.stars;save('sas_stars',String(stars));}
+    if(m.rewardHist&&m.rewardHist.length){rewardHist=m.rewardHist;save('sas_rhist',rewardHist);}
+  }
+
+  // Students
+  const stuSnaps=await getDocs(collection(fbDb,prefix));
+  stuSnaps.forEach(d=>{
+    if(d.id.startsWith('stu_')){
+      const s=d.data();
+      const existing=students.find(x=>x.id===s.id);
+      if(!existing){
+        // New student — use photoUrl as photo if no local photo
+        if(!s.photo&&s.photoUrl)s.photo=s.photoUrl;
+        students.push(s);
+      } else {
+        if(s.sessions)Object.assign(existing.sessions,s.sessions);
+        if(s.vocabMem)existing.vocabMem={...existing.vocabMem,...s.vocabMem};
+        if((s.totalStars||0)>existing.totalStars)existing.totalStars=s.totalStars;
+        // Load cloud photo if no local one
+        if(!existing.photo&&s.photoUrl)existing.photo=s.photoUrl;
+        if(s.photoUrl)existing.photoUrl=s.photoUrl;
+        if(s.badge)existing.badge=s.badge;
+      }
+    }
+  });
+  saveStudents();
+
+  // Re-render everything
+  renderSessContent();renderSessBar();renderReward();renderProgress();
+  if(document.getElementById('star-count'))document.getElementById('star-count').textContent=stars;
+}
+
+// Real-time listener — tự cập nhật khi GV khác thay đổi
+function startFbListener(){
+  if(fbUnsub){fbUnsub();fbUnsub=null;}
+  const{doc,onSnapshot}=window._fbMods;
+  const prefix='sas_'+fbClassId;
+  fbUnsub=onSnapshot(doc(fbDb,prefix,'_meta'),(snap)=>{
+    if(!snap.exists())return;
+    // chỉ apply nếu update từ máy khác (tránh loop)
+    const m=snap.data();
+    if(m.updatedAt&&(!window._lastFbPush||m.updatedAt>window._lastFbPush+3000)){
+      applyFbSnapshot().then(()=>{
+        fbDot('on');
+        const t=new Date().toLocaleTimeString('vi');
+        const el=document.getElementById('fb-sync-time');
+        if(el)el.textContent='Cập nhật real-time lúc '+t;
+      });
+    }
+  });
+}
+
+// Auto-reconnect on page load if config saved
+async function fbAutoConnect(){
+  const savedConfig=localStorage.getItem('fb_config');
+  const savedClass=localStorage.getItem('fb_class_id');
+  if(!savedConfig||!savedClass)return;
+  const{initializeApp,getFirestore}=window._fbMods||{};
+  if(!initializeApp)return;
+  try{
+    const config=JSON.parse(savedConfig);
+    fbClassId=savedClass;
+    try{
+      const app=initializeApp(config,'sas-'+savedClass);
+      fbDb=getFirestore(app);
+    }catch(e){
+      // app already initialized
+      const{getApp}=await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+      fbDb=getFirestore(getApp('sas-'+savedClass));
+    }
+    fbDot('on');
+    showFbConnected();
+    startFbListener();
+    // pre-fill form
+    const ci=document.getElementById('fb-class-id');
+    if(ci)ci.value=savedClass;
+    document.getElementById('fb-config-inp').value=savedConfig;
+  }catch(e){console.warn('Firebase auto-connect failed:',e.message);}
+}
+
+// Hook save() to also push to Firebase (debounced)
+const _origSave=save;
+let _fbDebounce=null;
+save=function(key,val){
+  _origSave(key,val);
+  if(fbDb&&(key==='sas_students'||key==='sas_steps'||key==='sas_links'||key==='sas_done'||key==='sas_stars')){
+    clearTimeout(_fbDebounce);
+    window._lastFbPush=Date.now();
+    _fbDebounce=setTimeout(()=>fbPushAll(),1500); // debounce 1.5s
+  }
+};
+
+updateKeyDot();
+initLesson();
+// Auto-connect Firebase after SDK loads
+setTimeout(()=>{if(window._fbMods)fbAutoConnect();},800);
+initSoundSlots();
+// wheel init deferred until vocab page opens
+renderReward();
+</script>
+</body>
+</html>
